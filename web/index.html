@@ -973,6 +973,25 @@
       });
     }
 
+    window.updateChartData = function(simulatedRecords) {
+      if (!ebitdaChartInstance) return;
+
+      ebitdaChartInstance.data.datasets.forEach(ds => {
+        const code = ds.entityCode;
+        const entityRows = simulatedRecords
+          .filter(r => r.entity_code === code)
+          .sort((a, b) => a.period_key.localeCompare(b.period_key));
+
+        ds.data = entityRows.map(r => r.adjEbitda);
+
+        // Dynamically highlight breach points with terracotta coloring
+        ds.pointBackgroundColor = entityRows.map(r => r.isBreach ? '#9E2A2B' : ENTITY_CONFIGS[code].pointColor);
+        ds.pointRadius = entityRows.map(r => r.isBreach ? 5 : 3);
+      });
+
+      ebitdaChartInstance.update();
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
       // Wire input listeners for sliders
       document.getElementById('slider-synergy').addEventListener('input', recalculateSimulation);
