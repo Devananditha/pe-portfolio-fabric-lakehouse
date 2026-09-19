@@ -17,6 +17,7 @@ def export():
     dim_period = pd.read_parquet(GOLD_DIR / "dim_period.parquet").to_dict(orient="records")
     dim_account = pd.read_parquet(GOLD_DIR / "dim_account.parquet").to_dict(orient="records")
     fact_covenant = pd.read_parquet(GOLD_DIR / "fact_covenant_health.parquet").to_dict(orient="records")
+    feat_covenant = pd.read_parquet(GOLD_DIR / "feat_portfolio_covenant_health.parquet").to_dict(orient="records")
     coa_crosswalk = pd.read_csv(RAW_DIR / "raw_coa_crosswalk_mapping.csv").to_dict(orient="records")
 
     gate_report_path = REPORTS_DIR / "lineage_variance_gate_report.json"
@@ -30,6 +31,7 @@ def export():
         "dim_period": dim_period,
         "dim_account": dim_account,
         "fact_covenant": fact_covenant,
+        "feat_covenant": feat_covenant,
         "coa_crosswalk": coa_crosswalk,
         "gate_report": gate_report,
     }

@@ -43,7 +43,7 @@ def check_environment() -> bool:
     py_ver = sys.version.split()[0]
     print(f"  [+] Python version: {py_ver}")
 
-    req_packages = ["pandas", "numpy", "pyarrow", "pytest"]
+    req_packages = ["pandas", "numpy", "pyarrow", "duckdb", "pytest"]
     missing = []
     for pkg in req_packages:
         try:
@@ -99,6 +99,7 @@ def run_gold() -> bool:
     models = pipeline.run()
     for name, df in models.items():
         print(f"  [+] Built Gold Mart '{name}': {len(df):,} records")
+    print("  [+] Exported Power BI Flat Mart: data/03_gold/powerbi_portfolio_value_creation.csv")
 
     # Refresh web dashboard payload
     try:
