@@ -226,8 +226,29 @@ class SilverHarmonizationPipeline:
         harmonized["standardized_amount_usd"] = np.select(conditions, standardized_amounts, default=harmonized["amount_usd"])
         harmonized["polarity_type"] = np.select(conditions, polarity_labels, default="STANDARD")
 
-        harmonized["_silver_harmonized_at"] = pd.Timestamp.now(tz="UTC").isoformat()
+        # 4. Append Lineage & Audit Tracking Attributes
+        ingestion_ts = datetime.now(timezone.utc).isoformat()
+        harmonized["_ingestion_timestamp"] = ingestion_ts
+        harmonized["_source_erp"] = harmonized["source_system"]
 
+        # Vectorized salted SHA-256 hash: (entry_id, entity_code, posting_date, amount_usd)
+        hash_payloads = (
+            HASH_SALT +
+            harmonized["entry_id"].astype(str) + "|" +
+            harmonized["entity_code"].astype(str) + "|" +
+            harmonized["posting_date"].astype(str) + "|" +
+            harmonized["amount_usd"].map(lambda x: f"{x:.2f}")
+        )
+        harmonized["_lineage_hash"] = [
+            hashlib.sha256(payload.encode("utf-8")).hexdigest()
+            for payload in hash_payloads
+        ]
+
+        # Clean up temporary join columns
+        cols_to_drop = [c for c in ["fx_period", "from_currency"] if c in harmonized.columns]
+        harmonized.drop(columns=cols_to_drop, inplace=True)
+
+        logger.info(f"Harmonization complete: {len(harmonized):,} rows with cryptographic lineage hashes.")
         return harmonized
 
     def harmonize_debt_covenants(self, debt_df: pd.DataFrame, fx_df: pd.DataFrame) -> pd.DataFrame:
