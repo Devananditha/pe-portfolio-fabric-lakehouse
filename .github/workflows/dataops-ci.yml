@@ -37,3 +37,27 @@ jobs:
       - name: Execute PyTest Financial Governance Suite
         run: |
           pytest tests/ -v
+
+      - name: Run End-to-End Medallion Lakehouse Pipeline
+        run: |
+          python run_pipeline.py --all
+
+      - name: Verify Lakehouse Parquet and Audit Artifacts
+        run: |
+          python -c "
+          import os
+          required_artifacts = [
+              'data/01_raw/raw_general_ledger_entries.csv',
+              'data/02_silver/fact_harmonized_ledger.parquet',
+              'data/03_gold/agg_portfolio_monthly_pl.parquet',
+              'data/03_gold/agg_portfolio_debt_facilities.parquet',
+              'data/03_gold/feat_portfolio_covenant_health.parquet',
+              'data/03_gold/powerbi_portfolio_value_creation.csv',
+              'data/03_gold/audit_variance_anomalies.csv',
+              'reports/lineage_variance_gate_report.json'
+          ]
+          for artifact in required_artifacts:
+              assert os.path.exists(artifact), f'Missing required artifact: {artifact}'
+              print(f'Verified artifact exists: {artifact}')
+          print('All Medallion lakehouse artifacts verified successfully.')
+          "
