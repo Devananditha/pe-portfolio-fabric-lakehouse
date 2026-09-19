@@ -214,25 +214,31 @@ class GoldDimensionalModelingPipeline:
         logger.info(f"SQL execution complete: {len(df):,} analytical rows produced across {df['entity_code'].nunique()} entities.")
         return df
 
-    def build_dim_entity(self, debt_silver: pd.DataFrame) -> pd.DataFrame:
+    def build_dim_entity(self, debt_df: pd.DataFrame) -> pd.DataFrame:
         """Constructs dim_entity containing entity metadata and debt covenant parameters."""
         cols = [
             "entity_id", "entity_name", "facility_name", "currency",
-            "principal_origination", "principal_usd", "annual_interest_rate",
-            "monthly_amortization", "monthly_amortization_usd",
-            "covenant_min_dscr", "covenant_max_leverage_ratio",
+            "principal_origination", "annual_interest_rate",
+            "monthly_amortization", "covenant_min_dscr", "covenant_max_leverage_ratio",
             "origination_date", "maturity_date"
         ]
-        dim_entity = debt_silver[cols].drop_duplicates().copy()
-        dim_entity.rename(columns={"currency": "functional_currency"}, inplace=True)
+        available_cols = [c for c in cols if c in debt_df.columns]
+        dim_entity = debt_df[available_cols].drop_duplicates().copy()
+        if "currency" in dim_entity.columns:
+            dim_entity.rename(columns={"currency": "functional_currency"}, inplace=True)
+        if "principal_usd" not in dim_entity.columns and "principal_origination" in dim_entity.columns:
+            dim_entity["principal_usd"] = dim_entity["principal_origination"]
+        if "monthly_amortization_usd" not in dim_entity.columns and "monthly_amortization" in dim_entity.columns:
+            dim_entity["monthly_amortization_usd"] = dim_entity["monthly_amortization"]
         return dim_entity
 
     def build_dim_period(self, gl_silver: pd.DataFrame) -> pd.DataFrame:
         """Constructs dim_period with calendar dimensions."""
-        periods = sorted(gl_silver["period"].unique())
+        period_col = "period_key" if "period_key" in gl_silver.columns else "period"
+        periods = sorted(gl_silver[period_col].unique())
         rows = []
         for idx, p in enumerate(periods, start=1):
-            y, m = map(int, p.split("-"))
+            y, m = map(int, str(p).split("-"))
             q = (m - 1) // 3 + 1
             rows.append({
                 "period_id": p,
@@ -247,13 +253,22 @@ class GoldDimensionalModelingPipeline:
 
     def build_dim_account(self, gl_silver: pd.DataFrame) -> pd.DataFrame:
         """Constructs dim_account with canonical Lakehouse Chart of Accounts."""
-        cols = ["canonical_account_code", "account_category", "financial_statement", "normal_balance"]
-        return gl_silver[cols].drop_duplicates().sort_values("canonical_account_code").reset_index(drop=True)
+        acc_col = "canonical_code" if "canonical_code" in gl_silver.columns else "canonical_account_code"
+        cols = [acc_col, "account_category", "financial_statement", "normal_balance"]
+        avail = [c for c in cols if c in gl_silver.columns]
+        df = gl_silver[avail].drop_duplicates().sort_values(acc_col).reset_index(drop=True)
+        if "canonical_account_code" not in df.columns:
+            df["canonical_account_code"] = df[acc_col]
+        return df
 
     def build_fact_financial_monthly(self, gl_silver: pd.DataFrame) -> pd.DataFrame:
         """Aggregates monthly financial figures by entity and canonical account."""
+        ent_col = "entity_code" if "entity_code" in gl_silver.columns else "entity_id"
+        period_col = "period_key" if "period_key" in gl_silver.columns else "period"
+        acc_col = "canonical_code" if "canonical_code" in gl_silver.columns else "canonical_account_code"
+
         agg = gl_silver.groupby(
-            ["entity_id", "period", "canonical_account_code", "currency"],
+            [ent_col, period_col, acc_col, "currency"],
             as_index=False
         ).agg({
             "debit_amount": "sum",
@@ -263,6 +278,9 @@ class GoldDimensionalModelingPipeline:
             "credit_usd": "sum",
             "net_amount_usd": "sum",
         })
+        agg["entity_id"] = agg[ent_col]
+        agg["period"] = agg[period_col]
+        agg["canonical_account_code"] = agg[acc_col]
         return agg
 
     def build_fact_covenant_health(
