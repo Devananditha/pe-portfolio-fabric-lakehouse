@@ -311,9 +311,45 @@ class SilverHarmonizationPipeline:
         harmonized_debt.to_parquet(debt_path, index=False)
         logger.info(f"Persisted flat Parquet tables: {flat_gl_path.name}, {debt_path.name}")
 
+    def export_audit_summary(self, harmonized_gl: pd.DataFrame) -> Dict[str, Any]:
+        """Generates audit summary telemetry reporting row counts and total USD volume by entity."""
+        self.reports_dir.mkdir(parents=True, exist_ok=True)
+        audit_path = self.reports_dir / "silver_harmonization_audit_summary.json"
+
+        summary: Dict[str, Any] = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "pipeline": "SilverHarmonizationPipeline",
+            "total_records": int(len(harmonized_gl)),
+            "total_gross_volume_usd": round(float(harmonized_gl["amount_usd"].sum()), 2),
+            "entities": {}
+        }
+
+        for ent in sorted(harmonized_gl["entity_code"].unique()):
+            ent_df = harmonized_gl[harmonized_gl["entity_code"] == ent]
+            rev_df = ent_df[ent_df["financial_statement_line"] == "REVENUE"]
+            cost_df = ent_df[ent_df["financial_statement_line"].isin(EXPENSE_STATEMENT_LINES)]
+
+            summary["entities"][ent] = {
+                "source_erp": str(ent_df["_source_erp"].iloc[0]),
+                "functional_currency": str(ent_df["currency"].iloc[0]),
+                "row_count": int(len(ent_df)),
+                "revenue_usd_volume": round(float(rev_df["amount_usd"].sum()), 2),
+                "cost_usd_volume": round(float(cost_df["amount_usd"].sum()), 2),
+                "total_usd_volume": round(float(ent_df["amount_usd"].sum()), 2),
+            }
+
+        with open(audit_path, "w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2)
+
+        logger.info(f"Audit summary persisted to: {audit_path}")
+        return summary
+
     def run(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Executes full Silver harmonization and persists Parquet tables."""
-        self.silver_dir.mkdir(parents=True, exist_ok=True)
+        """Executes full Silver semantic harmonization pipeline."""
+        logger.info("=" * 70)
+        logger.info("Executing Phase 2: Silver Semantic Harmonization & Multi-Currency Ledger")
+        logger.info("=" * 70)
+
         bronze_tables = self.bronze_pipeline.run()
 
         gl_silver = self.harmonize_general_ledger(
@@ -321,23 +357,22 @@ class SilverHarmonizationPipeline:
             bronze_tables["coa_crosswalk"],
             bronze_tables["fx_rates"]
         )
+
         debt_silver = self.harmonize_debt_covenants(
             bronze_tables["debt_covenants"],
             bronze_tables["fx_rates"]
         )
 
-        gl_path = self.silver_dir / "silver_general_ledger_harmonized.parquet"
-        debt_path = self.silver_dir / "silver_debt_covenants.parquet"
+        self.persist_silver_tables(gl_silver, debt_silver)
+        self.export_audit_summary(gl_silver)
 
-        gl_silver.to_parquet(gl_path, index=False)
-        debt_silver.to_parquet(debt_path, index=False)
+        logger.info("=" * 70)
+        logger.info(f"Silver Harmonization Succeeded: {len(gl_silver):,} transactions harmonized.")
+        logger.info("=" * 70)
 
         return gl_silver, debt_silver
 
 
 if __name__ == "__main__":
     pipeline = SilverHarmonizationPipeline()
-    gl_df, debt_df = pipeline.run()
-    print("Silver Harmonization Summary:")
-    print(f"  - Harmonized GL records: {len(gl_df)}")
-    print(f"  - Harmonized Debt Facilities: {len(debt_df)}")
+    gl, debt = pipeline.run()
