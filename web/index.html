@@ -1176,12 +1176,124 @@
       ebitdaChartInstance.update();
     };
 
+    const ENTITY_METADATA = {
+      'DURA_US': { name: 'DuraCorp Industrial Systems', erp: 'SAP S/4HANA', erpClass: 'badge-erp-sap' },
+      'MED_UK': { name: 'CloudMed HealthTech Ltd', erp: 'NetSuite', erpClass: 'badge-erp-netsuite' },
+      'LOGI_EU': { name: 'LogiTrans European Logistics', erp: 'Dynamics 365', erpClass: 'badge-erp-d365' },
+      'RETAIL_US': { name: 'Apex Omnichannel Retail Corp', erp: 'QuickBooks Online', erpClass: 'badge-erp-qbo' }
+    };
+
+    function initPeriodSelector() {
+      const selectElem = document.getElementById('select-period');
+      if (!selectElem || !window.PORTFOLIO_DATA || !window.PORTFOLIO_DATA.feat_covenant) return;
+      
+      const periods = [...new Set(window.PORTFOLIO_DATA.feat_covenant.map(r => r.period_key))].sort().reverse();
+      selectElem.innerHTML = '';
+      
+      periods.forEach((p, idx) => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        const periodIdx = 24 - idx;
+        let suffix = '';
+        if (p === '2025-12') suffix = ' (M24 - Latest Exit Run-Rate)';
+        else if (p === '2025-06') suffix = ' (M18 - Stress Scenario Onset)';
+        else if (p === '2024-01') suffix = ' (M01 - Portfolio Inception)';
+        else suffix = ` (M${String(periodIdx).padStart(2, '0')})`;
+        opt.textContent = `${p}${suffix}`;
+        selectElem.appendChild(opt);
+      });
+
+      if (periods.length > 0) {
+        selectElem.value = periods[0];
+        window.SCENARIO_STATE.selectedPeriod = periods[0];
+      }
+    }
+
+    function onPeriodChange() {
+      const selectElem = document.getElementById('select-period');
+      window.SCENARIO_STATE.selectedPeriod = selectElem.value;
+      recalculateSimulation();
+    }
+
+    window.updatePortfolioTable = function(simulatedRecords, activePeriod) {
+      const tbody = document.getElementById('portfolio-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+      const entityCodes = ['DURA_US', 'MED_UK', 'LOGI_EU', 'RETAIL_US'];
+
+      entityCodes.forEach(code => {
+        const meta = ENTITY_METADATA[code] || { name: code, erp: 'Standard ERP', erpClass: 'badge-erp-qbo' };
+        const entityAllMonths = simulatedRecords.filter(r => r.entity_code === code);
+        const currentRec = entityAllMonths.find(r => r.period_key === activePeriod);
+        if (!currentRec) return;
+
+        // Calculate Trailing 12M Revenue & EBITDA ending at activePeriod
+        const endIdx = entityAllMonths.findIndex(r => r.period_key === activePeriod);
+        const startIdx = Math.max(0, endIdx - 11);
+        const ttmSlice = entityAllMonths.slice(startIdx, endIdx + 1);
+        
+        const ttmRev = ttmSlice.reduce((s, r) => s + r.adjRevenue, 0);
+        const ttmEbitda = ttmSlice.reduce((s, r) => s + r.adjEbitda, 0);
+        const marginPct = ttmRev > 0 ? (ttmEbitda / ttmRev * 100) : 0;
+        const debtService = currentRec.adjDebtService;
+        const dscr = currentRec.adjDscr;
+        const minDscr = Number(currentRec.covenant_min_dscr) || 1.20;
+        const isBreach = currentRec.isBreach;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div class="entity-cell">
+              <strong>${meta.name}</strong>
+              <span>${code}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge-erp ${meta.erpClass}">${meta.erp}</span>
+          </td>
+          <td style="font-family: var(--font-mono); font-weight: 600;">
+            ${formatCurrencyM(ttmRev)}
+          </td>
+          <td style="font-family: var(--font-mono);">
+            ${marginPct.toFixed(1)}%
+          </td>
+          <td style="font-family: var(--font-mono); color: var(--text-stone);">
+            ${formatCurrency(debtService)}
+          </td>
+          <td>
+            <span style="font-family: var(--font-mono); font-size: 1rem; font-weight: 700; ${isBreach ? 'color: var(--terracotta-alert);' : 'color: var(--pine-primary);'}">
+              ${dscr.toFixed(2)}x
+            </span>
+          </td>
+          <td style="font-family: var(--font-mono); color: var(--text-stone);">
+            &ge; ${minDscr.toFixed(2)}x
+          </td>
+          <td>
+            ${isBreach ? `
+              <span class="covenant-pill breach">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="12"/></svg>
+                BREACH_ALERT
+              </span>
+            ` : `
+              <span class="covenant-pill healthy">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="12"/></svg>
+                HEALTHY
+              </span>
+            `}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
       // Wire input listeners for sliders
       document.getElementById('slider-synergy').addEventListener('input', recalculateSimulation);
       document.getElementById('slider-spread').addEventListener('input', recalculateSimulation);
       document.getElementById('slider-pricing').addEventListener('input', recalculateSimulation);
 
+      initPeriodSelector();
       initEbitdaChart();
       recalculateSimulation();
     });
