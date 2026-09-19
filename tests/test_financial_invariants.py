@@ -14,6 +14,8 @@ import pytest
 
 
 RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "01_raw"
+SILVER_DIR = Path(__file__).resolve().parent.parent / "data" / "02_silver"
+GOLD_DIR = Path(__file__).resolve().parent.parent / "data" / "03_gold"
 
 
 @pytest.fixture(scope="module")
@@ -44,8 +46,40 @@ def raw_debt() -> pd.DataFrame:
     return pd.read_csv(path)
 
 
+@pytest.fixture(scope="module")
+def gold_covenant_health() -> pd.DataFrame:
+    path = GOLD_DIR / "feat_portfolio_covenant_health.parquet"
+    if not path.exists():
+        from src.pipelines.gold_dimensional_modeling import GoldDimensionalModelingPipeline
+        pipeline = GoldDimensionalModelingPipeline()
+        models = pipeline.run()
+        return models["feat_portfolio_covenant_health"]
+    return pd.read_parquet(path)
+
+
+@pytest.fixture(scope="module")
+def silver_gl() -> pd.DataFrame:
+    path = SILVER_DIR / "silver_general_ledger_harmonized.parquet"
+    if not path.exists():
+        from src.pipelines.silver_harmonization import SilverHarmonizationPipeline
+        pipeline = SilverHarmonizationPipeline()
+        gl, _ = pipeline.run()
+        return gl
+    return pd.read_parquet(path)
+
+
 class TestFinancialInvariants:
     """Core financial accounting invariants."""
+
+    def test_gross_profit_le_revenue_invariant(self, gold_covenant_health: pd.DataFrame):
+        """Gross Profit must never exceed Revenue for any period (Gross Profit <= Revenue)."""
+        for _, row in gold_covenant_health.iterrows():
+            rev = float(row["revenue"])
+            gp = float(row["gross_profit"])
+            assert gp <= rev + 1e-5, (
+                f"Gross profit invariant violated for {row['entity_code']} {row['period_key']}: "
+                f"Gross Profit ({gp}) > Revenue ({rev})"
+            )
 
     def test_raw_gl_aggregate_double_entry(self, raw_gl: pd.DataFrame):
         """Total Debits must exactly equal Total Credits across the entire General Ledger."""
