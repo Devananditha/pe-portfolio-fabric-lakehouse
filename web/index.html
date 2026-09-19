@@ -105,12 +105,208 @@
     .editorial-card:hover {
       border-color: var(--border-stone-strong);
     }
+
+    /* Executive Header */
+    header {
+      padding: 2.25rem 0 1.5rem 0;
+      border-bottom: 1px solid var(--border-stone);
+      margin-bottom: 2rem;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .brand-identity {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .brand-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--pine-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: var(--pine-primary);
+      border-radius: 50%;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 2.25rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--text-pine);
+      line-height: 1.15;
+    }
+
+    .brand-subtitle {
+      font-size: 0.9375rem;
+      color: var(--text-stone);
+      max-width: 720px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background-color: var(--sage-light);
+      color: var(--sage-accent);
+      border: 1px solid rgba(61, 112, 88, 0.2);
+    }
+
+    .badge-status .status-dot {
+      width: 7px;
+      height: 7px;
+      background-color: var(--sage-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(61, 112, 88, 0.25);
+    }
+
+    .btn-editorial {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-pine);
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-stone);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn-editorial:hover {
+      background-color: var(--bg-subtle);
+      border-color: var(--border-stone-strong);
+    }
+
+    /* Sub-header Entity Ticker Bar */
+    .ticker-bar {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0.75rem 1rem;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-stone);
+      border-radius: var(--radius-sm);
+      margin-top: 1.25rem;
+      overflow-x: auto;
+      font-size: 0.8125rem;
+    }
+
+    .ticker-title {
+      font-weight: 700;
+      color: var(--text-stone);
+      text-transform: uppercase;
+      font-size: 0.6875rem;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .ticker-items {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text-pine);
+    }
+
+    .ticker-pill {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-stone);
+      color: var(--text-stone);
+    }
   </style>
 </head>
 <body>
   <div class="linen-texture"></div>
   <div class="app-container" id="root-app">
-    <!-- Application scaffolding -->
+    <header>
+      <div class="header-top">
+        <div class="brand-identity">
+          <span class="brand-eyebrow">Institutional Lakehouse Governance &bull; Series PE-IV</span>
+          <h1 class="brand-title">Aethelgard Capital Management</h1>
+          <p class="brand-subtitle">Private Equity Portfolio Value Creation Lakehouse &bull; Senior Debt Covenant Monitoring, Multi-ERP Harmonization & Real-Time What-If Simulation Engine</p>
+        </div>
+        <div class="header-actions">
+          <span class="badge-status">
+            <span class="status-dot"></span>
+            Medallion Fabric Live &bull; 100% Invariants Passed
+          </span>
+          <button id="btn-open-audit" class="btn-editorial" onclick="toggleAuditModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Variance Drift Audit
+          </button>
+        </div>
+      </div>
+
+      <div class="ticker-bar">
+        <span class="ticker-title">Portfolio Assets & ERP Systems:</span>
+        <div class="ticker-items">
+          <div class="ticker-item">
+            <strong>DuraCorp / DuraTech</strong>
+            <span class="ticker-pill">SAP S/4HANA</span>
+          </div>
+          <div class="ticker-item">
+            <strong>CloudMed HealthTech</strong>
+            <span class="ticker-pill">NetSuite</span>
+          </div>
+          <div class="ticker-item">
+            <strong>LogiTrans Logistics</strong>
+            <span class="ticker-pill">Dynamics 365</span>
+          </div>
+          <div class="ticker-item">
+            <strong>Apex Omnichannel</strong>
+            <span class="ticker-pill">QuickBooks Online</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <!-- Executive Dashboard Content -->
+    </main>
   </div>
   <script src="data.js"></script>
 </body>
