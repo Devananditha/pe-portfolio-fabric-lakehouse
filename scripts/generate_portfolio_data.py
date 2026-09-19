@@ -336,13 +336,18 @@ def generate_general_ledger_entries(output_path: Path) -> int:
     headers = [
         "entry_id",
         "batch_id",
+        "posting_date",
         "transaction_date",
+        "period_key",
         "period",
+        "entity_code",
         "entity_id",
         "source_system",
+        "raw_account_code",
         "legacy_gl_code",
         "legacy_gl_description",
         "currency",
+        "amount_local_currency",
         "debit_amount",
         "credit_amount",
         "net_amount",
@@ -508,16 +513,22 @@ def generate_general_ledger_entries(output_path: Path) -> int:
                     batch_debit_sum += debit
                     batch_credit_sum += credit
                     net_amt = debit - credit
+                    amount_local = debit if debit > Decimal("0.00") else credit
                     all_rows.append({
                         "entry_id": f"GL-{entry_counter:07d}",
                         "batch_id": batch_id,
+                        "posting_date": tx_date,
                         "transaction_date": tx_date,
+                        "period_key": period_str,
                         "period": period_str,
+                        "entity_code": entity_id,
                         "entity_id": entity_id,
                         "source_system": sys,
+                        "raw_account_code": gl_code,
                         "legacy_gl_code": gl_code,
                         "legacy_gl_description": gl_desc,
                         "currency": curr,
+                        "amount_local_currency": f"{amount_local:.2f}",
                         "debit_amount": f"{debit:.2f}",
                         "credit_amount": f"{credit:.2f}",
                         "net_amount": f"{net_amt:.2f}",
