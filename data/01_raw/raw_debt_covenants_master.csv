@@ -1,0 +1,5 @@
+entity_id,entity_name,facility_name,currency,principal_origination,annual_interest_rate,monthly_amortization,covenant_min_dscr,covenant_max_leverage_ratio,origination_date,maturity_date
+DURA_US,DuraCorp Industrial Systems,Senior Secured Term Loan A,USD,50000000.00,0.0750,400000.00,1.25,4.50,2023-12-15,2028-12-15
+MED_UK,CloudMed HealthTech Ltd,Syndicated Growth Debt Facility,GBP,25000000.00,0.0650,180000.00,1.35,3.75,2023-11-01,2028-11-01
+LOGI_EU,LogiTrans European Logistics GmbH,Euro Term Loan B,EUR,35000000.00,0.0580,250000.00,1.20,4.25,2023-10-01,2029-10-01
+RETAIL_US,Apex Omnichannel Retail Corp,Asset-Based Senior Revolver,USD,15000000.00,0.0800,100000.00,1.20,4.00,2024-01-01,2027-12-31
