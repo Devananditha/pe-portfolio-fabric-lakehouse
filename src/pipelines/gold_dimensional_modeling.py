@@ -168,14 +168,50 @@ class GoldDimensionalModelingPipeline:
                 CAST(d.covenant_min_dscr AS DOUBLE) AS covenant_min_dscr,
                 CAST(d.covenant_max_leverage_ratio AS DOUBLE) AS covenant_max_leverage_ratio,
                 -- Total Monthly Debt Service = Interest Expense + Monthly Amortization
-                ROUND(w.interest_expense + CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE), 2) AS monthly_debt_service
+                ROUND(w.interest_expense + CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE), 2) AS monthly_debt_service,
+                -- DSCR = EBITDA / Monthly Debt Service
+                ROUND(w.ebitda / NULLIF(w.interest_expense + CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE), 0), 3) AS dscr,
+                -- DSCR Headroom = DSCR - covenant_min_dscr
+                ROUND((w.ebitda / NULLIF(w.interest_expense + CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE), 0)) - CAST(d.covenant_min_dscr AS DOUBLE), 3) AS dscr_headroom,
+                -- Dynamic Covenant Health Classification
+                CASE 
+                    WHEN (w.ebitda / NULLIF(w.interest_expense + CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE), 0)) >= CAST(d.covenant_min_dscr AS DOUBLE) * 1.10 THEN 'HEALTHY'
+                    WHEN (w.ebitda / NULLIF(w.interest_expense + CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE), 0)) >= CAST(d.covenant_min_dscr AS DOUBLE) THEN 'AT_RISK'
+                    ELSE 'BREACH_ALERT'
+                END AS covenant_health_status
             FROM windowed_metrics w
             JOIN debt_master d ON w.entity_code = d.entity_id
         )
-        SELECT * FROM covenant_metrics ORDER BY entity_code, period_key;
+        SELECT * FROM covenant_metrics
+        ORDER BY entity_code, period_key;
         """
         df = con.execute(query).df()
         con.close()
+
+        # Add backward-compatible schema aliases for legacy tests and downstream consumers
+        df["entity_id"] = df["entity_code"]
+        df["period"] = df["period_key"]
+        df["revenue_usd"] = df["revenue"]
+        df["cogs_usd"] = df["cogs"]
+        df["gross_profit_usd"] = df["gross_profit"]
+        df["opex_usd"] = df["opex"]
+        df["ebitda_usd"] = df["ebitda"]
+        df["da_usd"] = df["da"]
+        df["ebit_usd"] = df["ebit"]
+        df["interest_usd"] = df["interest_expense"]
+        df["debt_service_usd"] = df["monthly_debt_service"]
+        df["monthly_amortization_usd"] = df["monthly_amortization"]
+
+        # Map covenant_health_status to legacy covenant_status
+        status_map = {
+            "HEALTHY": "COMPLIANT",
+            "AT_RISK": "WARNING",
+            "BREACH_ALERT": "BREACH"
+        }
+        df["covenant_status"] = df["covenant_health_status"].map(status_map)
+        df["is_breach"] = (df["covenant_health_status"] == "BREACH_ALERT").astype(int)
+
+        logger.info(f"SQL execution complete: {len(df):,} analytical rows produced across {df['entity_code'].nunique()} entities.")
         return df
 
     def build_dim_entity(self, debt_silver: pd.DataFrame) -> pd.DataFrame:
