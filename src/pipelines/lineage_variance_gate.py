@@ -79,6 +79,8 @@ class LineageVarianceGate:
                 rev_pct = (rev_curr - rev_prev) / rev_prev if rev_prev != 0 else 0.0
 
                 if abs(rev_pct) > VARIANCE_THRESHOLD:
+                    doc_desc = DOCUMENTED_EVENTS.get((ent, p_idx))
+                    is_doc = doc_desc is not None
                     anomalies.append({
                         "entity_code": ent,
                         "period_key": p_key,
@@ -87,6 +89,9 @@ class LineageVarianceGate:
                         "current_value": round(rev_curr, 2),
                         "prior_value": round(rev_prev, 2),
                         "pct_change": round(rev_pct * 100.0, 2),
+                        "is_documented_event": is_doc,
+                        "event_description": doc_desc or "Unexplained variance exceeding ±15% threshold",
+                        "severity": "DOCUMENTED_EVENT" if is_doc else "UNEXPECTED_ANOMALY"
                     })
 
                 # 2. EBITDA PoP swing calculation
@@ -95,6 +100,8 @@ class LineageVarianceGate:
                 eb_pct = (eb_curr - eb_prev) / eb_prev if eb_prev != 0 else 0.0
 
                 if abs(eb_pct) > VARIANCE_THRESHOLD:
+                    doc_desc = DOCUMENTED_EVENTS.get((ent, p_idx))
+                    is_doc = doc_desc is not None
                     anomalies.append({
                         "entity_code": ent,
                         "period_key": p_key,
@@ -103,12 +110,30 @@ class LineageVarianceGate:
                         "current_value": round(eb_curr, 2),
                         "prior_value": round(eb_prev, 2),
                         "pct_change": round(eb_pct * 100.0, 2),
+                        "is_documented_event": is_doc,
+                        "event_description": doc_desc or "Unexplained variance exceeding ±15% threshold",
+                        "severity": "DOCUMENTED_EVENT" if is_doc else "UNEXPECTED_ANOMALY"
                     })
 
         anom_df = pd.DataFrame(anomalies)
+        if anom_df.empty:
+            anom_df = pd.DataFrame(columns=[
+                "entity_code", "period_key", "period_index", "metric",
+                "current_value", "prior_value", "pct_change",
+                "is_documented_event", "event_description", "severity"
+            ])
+            doc_count = 0
+            unexp_count = 0
+        else:
+            doc_count = int(anom_df["is_documented_event"].sum())
+            unexp_count = int((~anom_df["is_documented_event"]).sum())
+
         summary = {
             "threshold_pct": VARIANCE_THRESHOLD * 100.0,
             "total_swings_flagged": len(anom_df),
+            "documented_swings": doc_count,
+            "unexpected_anomalies": unexp_count,
+            "passed": bool(unexp_count == 0),
         }
         return anom_df, summary
 
