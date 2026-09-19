@@ -670,36 +670,122 @@
 
   <script src="data.js"></script>
   <script>
-    // Initial State & KPI Binding Logic
     function formatCurrencyM(val) {
       return '$' + (val / 1000000).toFixed(1) + 'M';
     }
 
-    function initTopKpis() {
+    function formatCurrency(val) {
+      return '$' + Number(val).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    // Global simulation state
+    window.SCENARIO_STATE = {
+      synergyPct: 0.0,
+      spreadBps: 0,
+      pricingMult: 1.00,
+      selectedPeriod: null
+    };
+
+    function recalculateSimulation() {
       if (!window.PORTFOLIO_DATA || !window.PORTFOLIO_DATA.feat_covenant) return;
+      
+      const synergyPct = parseFloat(document.getElementById('slider-synergy').value) || 0;
+      const spreadBps = parseInt(document.getElementById('slider-spread').value) || 0;
+      const pricingMult = parseFloat(document.getElementById('slider-pricing').value) || 1.00;
+      
+      window.SCENARIO_STATE.synergyPct = synergyPct;
+      window.SCENARIO_STATE.spreadBps = spreadBps;
+      window.SCENARIO_STATE.pricingMult = pricingMult;
+
+      // Update slider badge text
+      document.getElementById('val-synergy').textContent = synergyPct.toFixed(1) + '%';
+      document.getElementById('val-spread').textContent = (spreadBps > 0 ? '+' : '') + spreadBps + ' bps';
+      document.getElementById('val-pricing').textContent = pricingMult.toFixed(2) + 'x';
+
       const feat = window.PORTFOLIO_DATA.feat_covenant;
       const dimEntity = window.PORTFOLIO_DATA.dim_entity || [];
-      
-      // Calculate latest month (2025-12 or max period)
       const periods = [...new Set(feat.map(r => r.period_key))].sort();
       const latestPeriod = periods[periods.length - 1];
-      const latestRows = feat.filter(r => r.period_key === latestPeriod);
+      const activePeriod = window.SCENARIO_STATE.selectedPeriod || latestPeriod;
 
-      const totalTTMRevenue = latestRows.reduce((acc, r) => acc + (Number(r.ttm_revenue) || 0), 0);
-      const totalTTMEbitda = latestRows.reduce((acc, r) => acc + (Number(r.ttm_ebitda) || 0), 0);
-      const aggregateMargin = totalTTMRevenue > 0 ? (totalTTMEbitda / totalTTMRevenue * 100) : 0;
-      const totalDebt = dimEntity.reduce((acc, e) => acc + (Number(e.principal_usd) || 0), 0);
-      const activeBreaches = latestRows.filter(r => r.covenant_health_status === 'BREACH_ALERT' || r.is_breach == 1).length;
+      // Compute adjusted record per row
+      const simulatedRecords = feat.map(r => {
+        const rawRev = Number(r.revenue);
+        const rawCogs = Number(r.cogs);
+        const rawOpex = Number(r.opex);
+        const baseGrossProfit = Number(r.gross_profit);
+        
+        // Pricing power adjustment
+        const adjRevenue = rawRev * pricingMult;
+        const revDelta = adjRevenue - rawRev;
+        const adjGrossProfit = baseGrossProfit + revDelta;
+        
+        // Synergy OPEX savings
+        const adjOpex = rawOpex * (1 - (synergyPct / 100));
+        const adjEbitda = adjGrossProfit - adjOpex;
 
-      document.getElementById('kpi-ttm-revenue').textContent = formatCurrencyM(totalTTMRevenue);
-      document.getElementById('kpi-ebitda-margin').textContent = aggregateMargin.toFixed(1) + '%';
-      document.getElementById('kpi-total-debt').textContent = formatCurrencyM(totalDebt);
+        // Debt spread adjustment
+        const rateAdj = spreadBps / 10000;
+        const baseRate = Number(r.annual_interest_rate);
+        const effectiveRate = Math.max(0.005, baseRate + rateAdj);
+        const principal = Number(r.principal_origination);
+        const monthlyAmort = Number(r.monthly_amortization);
+        const adjInterest = (principal * effectiveRate) / 12;
+        const adjDebtService = monthlyAmort + adjInterest;
+        
+        const adjDscr = adjDebtService > 0 ? (adjEbitda / adjDebtService) : 0;
+        const minDscr = Number(r.covenant_min_dscr) || 1.20;
+        const isBreach = adjDscr < minDscr;
+        const status = isBreach ? 'BREACH_ALERT' : 'HEALTHY';
+
+        return {
+          ...r,
+          adjRevenue,
+          adjGrossProfit,
+          adjOpex,
+          adjEbitda,
+          adjInterest,
+          adjDebtService,
+          adjDscr,
+          isBreach,
+          covenant_health_status: status
+        };
+      });
+
+      window.SCENARIO_STATE.simulatedRecords = simulatedRecords;
+
+      // Update Top KPIs based on simulated records
+      const activeRows = simulatedRecords.filter(r => r.period_key === activePeriod);
       
+      // Calculate consolidated TTM Revenue and EBITDA with scenario adjustments
+      let totalTTMRev = 0;
+      let totalTTMEbitda = 0;
+
+      const entityCodes = ['DURA_US', 'MED_UK', 'LOGI_EU', 'RETAIL_US'];
+      entityCodes.forEach(code => {
+        const entityAllMonths = simulatedRecords.filter(r => r.entity_code === code);
+        const endIdx = entityAllMonths.findIndex(r => r.period_key === activePeriod);
+        if (endIdx >= 0) {
+          const startIdx = Math.max(0, endIdx - 11);
+          const ttmSlice = entityAllMonths.slice(startIdx, endIdx + 1);
+          totalTTMRev += ttmSlice.reduce((s, x) => s + x.adjRevenue, 0);
+          totalTTMEbitda += ttmSlice.reduce((s, x) => s + x.adjEbitda, 0);
+        }
+      });
+
+      const totalDebt = dimEntity.reduce((acc, e) => acc + (Number(e.principal_usd) || 0), 0);
+      const aggMargin = totalTTMRev > 0 ? (totalTTMEbitda / totalTTMRev * 100) : 0;
+      const activeBreaches = activeRows.filter(r => r.isBreach).length;
+
+      document.getElementById('kpi-ttm-revenue').textContent = formatCurrencyM(totalTTMRev);
+      document.getElementById('kpi-ebitda-margin').textContent = aggMargin.toFixed(1) + '%';
+      document.getElementById('kpi-total-debt').textContent = formatCurrencyM(totalDebt);
+
       const breachElem = document.getElementById('kpi-active-breaches');
       const breachCard = document.getElementById('kpi-card-breaches');
       const breachStatusText = document.getElementById('kpi-breach-status-text');
       breachElem.textContent = activeBreaches;
-      
+
       if (activeBreaches > 0) {
         breachCard.classList.add('has-breach');
         breachStatusText.textContent = `${activeBreaches} Entity Below Min DSCR`;
@@ -707,10 +793,37 @@
         breachCard.classList.remove('has-breach');
         breachStatusText.textContent = 'All Entities Compliant';
       }
+
+      // Hooks for Chart and Table
+      if (typeof window.updateChartData === 'function') {
+        window.updateChartData(simulatedRecords);
+      }
+      if (typeof window.updatePortfolioTable === 'function') {
+        window.updatePortfolioTable(simulatedRecords, activePeriod);
+      }
+    }
+
+    function setPreset(type, value) {
+      if (type === 'synergy') document.getElementById('slider-synergy').value = value;
+      if (type === 'spread') document.getElementById('slider-spread').value = value;
+      if (type === 'pricing') document.getElementById('slider-pricing').value = value;
+      recalculateSimulation();
+    }
+
+    function resetScenarioControls() {
+      document.getElementById('slider-synergy').value = 0;
+      document.getElementById('slider-spread').value = 0;
+      document.getElementById('slider-pricing').value = 1.00;
+      recalculateSimulation();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      initTopKpis();
+      // Wire input listeners for sliders
+      document.getElementById('slider-synergy').addEventListener('input', recalculateSimulation);
+      document.getElementById('slider-spread').addEventListener('input', recalculateSimulation);
+      document.getElementById('slider-pricing').addEventListener('input', recalculateSimulation);
+
+      recalculateSimulation();
     });
   </script>
 </body>
