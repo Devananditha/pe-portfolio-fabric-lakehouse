@@ -91,6 +91,81 @@ Automated test suite asserting institutional financial truths across 29 test sce
 
 ---
 
+## 📐 Financial Window Modeling Formulas & Analytical CTE Layer
+
+The Lakehouse Gold Mart (`src/pipelines/gold_dimensional_modeling.py`) computes institutional-grade dimensional metrics via DuckDB analytical Common Table Expressions (CTEs) and SQL window functions:
+
+1. **Rolling 3-Month Trailing EBITDA**:
+   Smoothes monthly cash-flow volatility across quarterly operating cycles:
+   $$\text{Rolling 3M EBITDA}_{i, t} = \frac{1}{\min(t, 3)} \sum_{k=0}^{\min(t-1, 2)} \text{EBITDA}_{i, t-k}$$
+   ```sql
+   AVG(ebitda) OVER (
+     PARTITION BY entity_code 
+     ORDER BY period_key 
+     ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+   ) AS rolling_3m_ebitda
+   ```
+
+2. **Trailing Twelve Months (TTM) Performance**:
+   $$\text{TTM Metric}_{i, t} = \sum_{k=0}^{\min(t-1, 11)} \text{Metric}_{i, t-k}$$
+   ```sql
+   SUM(revenue) OVER (
+     PARTITION BY entity_code 
+     ORDER BY period_key 
+     ROWS BETWEEN 11 PRECEDING AND CURRENT ROW
+   ) AS ttm_revenue
+   ```
+
+3. **Monthly Debt Service & Coverage Ratio (DSCR)**:
+   $$\text{Debt Service}_{i, t} = \text{Monthly Principal Amortization}_{i} + \frac{\text{Senior Facility Principal}_{i} \times \text{Annual Interest Rate}_{i}}{12}$$
+   $$\text{DSCR}_{i, t} = \frac{\text{EBITDA}_{i, t}}{\text{Debt Service}_{i, t}}$$
+   $$\text{DSCR Headroom}_{i, t} = \text{DSCR}_{i, t} - \text{Covenant Min DSCR}_{i}$$
+
+4. **Dynamic Covenant Health Classification**:
+   $$\text{Status}_{i, t} = \begin{cases} 
+   \text{BREACH\_ALERT} & \text{if } \text{DSCR}_{i, t} < \text{Min DSCR}_{i} \\
+   \text{WARNING} & \text{if } \text{Min DSCR}_{i} \le \text{DSCR}_{i, t} < \text{Min DSCR}_{i} + 0.15 \\
+   \text{HEALTHY} & \text{otherwise}
+   \end{cases}$$
+
+---
+
+## 📈 Quantified Value-Creation EBITDA Sensitivity Matrix
+
+The table below illustrates the sensitivity of Consolidated Portfolio TTM EBITDA, EBITDA Margin, and `DURA_US` Stress DSCR across commercial pricing power, operational synergy capture, and capital market refinancing spreads:
+
+| Scenario | Pricing Power | Synergy OPEX Savings | Debt Spread (bps) | Consolidated TTM Revenue | Consolidated TTM EBITDA | Portfolio EBITDA Margin | DURA_US Stress DSCR (M18) | DURA_US Covenant Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Severe Downturn** | 0.95x | 0.0% | +200 bps | $112.5M | $29.2M | 26.0% | **0.19x** | `BREACH_ALERT` |
+| **Current Baseline** | 1.00x | 0.0% | 0 bps | $118.4M | $36.9M | 31.2% | **0.23x** | `BREACH_ALERT` |
+| **Conservative Plan** | 1.02x | 5.0% | -50 bps | $120.8M | $40.5M | 33.5% | **0.31x** | `BREACH_ALERT` |
+| **Target PE Case** | 1.05x | 10.0% | -100 bps | $124.3M | $45.8M | 36.8% | **0.42x** | `BREACH_ALERT` |
+| **Aggressive Turnaround** | 1.10x | 15.0% | -150 bps | $130.2M | $54.7M | 42.0% | **0.61x** | `BREACH_ALERT` |
+| **Normal Run-Rate (M24)** | 1.05x | 10.0% | -100 bps | $124.3M | $45.8M | 36.8% | **2.21x** | `HEALTHY` |
+
+---
+
+## 🏛️ Executive Power BI Mart & Warm Linen Web Dashboard
+
+### 1. Warm Linen & Forest Green Editorial Aesthetic (`web/index.html`)
+The executive web dashboard is engineered to eliminate generic AI SaaS tropes (neon glowing dark-modes, purple gradients) in favor of a stately private equity editorial aesthetic:
+- **Canvas Texture & Background**: Warm Oatmeal / Linen (`#F7F5F0`) with subtle radial point texture.
+- **Card System**: Pure Off-White (`#FFFFFF`) with warm stone borders (`#E5E0D8`) and elevated drop shadows.
+- **Typography Pairing**: Editorial Serif (`Newsreader`) for statement headers paired with `Plus Jakarta Sans` and `JetBrains Mono` for tabular metrics.
+- **Primary Accents**: Deep Forest Pine (`#234E3E`) and Sage (`#3D7058`).
+- **Breach Alert Signaling**: Warm Terracotta / Burnt Sienna (`#9E2A2B`) with subtle pulsing aura.
+
+### 2. Interactive Value Creation Controls & Zero-Cold-Start Architecture
+- **Interactive What-If Sliders**: Real-time evaluation of Synergy Cost Reductions (0% to 15%), Debt Refinance Spreads (-150 to +200 bps), and Pricing Power (0.95x to 1.15x).
+- **Chart.js Dynamic Trajectory**: Smooth, responsive 24-month EBITDA curve across Apex, CloudMed, LogiTrans, and DuraCorp with live breach highlight points.
+- **Instant Client-Side Engine**: Loaded from pre-compiled `web/data.js` for zero-lag instant rendering without external backend requirements.
+
+### 3. Microsoft Power BI Semantic Model (`docs/powerbi_semantic_model.md`)
+- Ready for ingestion into Microsoft Power BI Desktop and Fabric Service.
+- Includes full Star Schema relationship diagrams, production DAX formulas (TTM calculations, weighted DSCR, breach filters), What-If parameter tables, and Power Query M ingestion scripts.
+
+---
+
 ## 🚀 Quickstart & CLI Orchestration
 
 ### 1. Install Dependencies
