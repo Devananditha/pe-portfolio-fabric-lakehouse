@@ -190,6 +190,42 @@ class SilverHarmonizationPipeline:
         harmonized["debit_usd"] = (harmonized["debit_amount"] * conversion_rate).round(2)
         harmonized["credit_usd"] = (harmonized["credit_amount"] * conversion_rate).round(2)
         harmonized["net_amount_usd"] = (harmonized["net_amount"] * conversion_rate).round(2)
+
+        # 3. Standardize transaction polarity:
+        # - Credits for revenues as positive inflows (+amount_usd)
+        # - Debits for expenses (COGS, OPEX, D&A, Interest) as positive cost items (+amount_usd)
+        is_revenue = harmonized["financial_statement_line"] == "REVENUE"
+        is_expense = harmonized["financial_statement_line"].isin(EXPENSE_STATEMENT_LINES)
+        is_asset = harmonized["financial_statement"] == "Balance_Sheet"
+
+        conditions = [
+            is_revenue & (harmonized["credit_amount"] > 0),
+            is_revenue & (harmonized["debit_amount"] > 0),
+            is_expense & (harmonized["debit_amount"] > 0),
+            is_expense & (harmonized["credit_amount"] > 0),
+            is_asset & (harmonized["debit_amount"] > 0),
+            is_asset & (harmonized["credit_amount"] > 0),
+        ]
+        standardized_amounts = [
+            harmonized["amount_usd"],           # Positive revenue inflow
+            -harmonized["amount_usd"],          # Contra-revenue debit
+            harmonized["amount_usd"],           # Positive expense cost item
+            -harmonized["amount_usd"],          # Contra-expense / rebate credit
+            harmonized["amount_usd"],           # Asset addition / debit
+            -harmonized["amount_usd"],          # Asset relief / credit
+        ]
+        polarity_labels = [
+            "INFLOW",
+            "CONTRA_INFLOW",
+            "COST_ITEM",
+            "CONTRA_COST",
+            "ASSET_INCREASE",
+            "LIABILITY_EQUITY_INCREASE",
+        ]
+
+        harmonized["standardized_amount_usd"] = np.select(conditions, standardized_amounts, default=harmonized["amount_usd"])
+        harmonized["polarity_type"] = np.select(conditions, polarity_labels, default="STANDARD")
+
         harmonized["_silver_harmonized_at"] = pd.Timestamp.now(tz="UTC").isoformat()
 
         return harmonized
