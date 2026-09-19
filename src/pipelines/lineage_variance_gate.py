@@ -28,6 +28,19 @@ from src.pipelines.silver_harmonization import SilverHarmonizationPipeline
 
 
 REPORTS_DIR = PROJECT_ROOT / "reports"
+GOLD_DIR = PROJECT_ROOT / "data" / "03_gold"
+
+# Period-over-period variance drift threshold (±15%)
+VARIANCE_THRESHOLD = 0.15
+
+# Catalog of documented operational events explaining variance swings
+DOCUMENTED_EVENTS: Dict[Tuple[str, int], str] = {
+    ("DURA_US", 18): "DURA_US operational stress onset: supply chain disruption and customer contract renegotiation causing severe revenue and EBITDA compression.",
+    ("DURA_US", 19): "DURA_US stress continuation: operational stabilization efforts.",
+    ("DURA_US", 20): "DURA_US stress continuation: margin compression under revised pricing.",
+    ("DURA_US", 21): "DURA_US stress trough: final month of stressed covenant compliance.",
+    ("DURA_US", 22): "DURA_US operational turnaround and contract rebound: revenue normalization and EBITDA surge back to baseline.",
+}
 
 
 class LineageVarianceGate:
@@ -36,9 +49,11 @@ class LineageVarianceGate:
     def __init__(
         self,
         reports_dir: Optional[Path] = None,
+        gold_dir: Optional[Path] = None,
         gold_pipeline: Optional[GoldDimensionalModelingPipeline] = None
     ):
         self.reports_dir = reports_dir or REPORTS_DIR
+        self.gold_dir = gold_dir or GOLD_DIR
         self.gold_pipeline = gold_pipeline or GoldDimensionalModelingPipeline()
 
     def evaluate_gate(self) -> Dict[str, Any]:
