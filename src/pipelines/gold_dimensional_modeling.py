@@ -103,8 +103,20 @@ class GoldDimensionalModelingPipeline:
                 ROUND(revenue - cogs - opex - da, 2) AS ebit,
                 ROUND(CASE WHEN revenue > 0 THEN ((revenue - cogs - opex) / revenue) * 100.0 ELSE 0.0 END, 2) AS ebitda_margin_pct
             FROM monthly_lines
+        ),
+        windowed_metrics AS (
+            -- CTE 3: Execute advanced analytical window functions (Rolling 3M)
+            SELECT
+                p.*,
+                -- 3-Month Rolling Average EBITDA
+                ROUND(AVG(p.ebitda) OVER (
+                    PARTITION BY p.entity_code 
+                    ORDER BY p.period_key 
+                    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+                ), 2) AS rolling_3m_ebitda
+            FROM pnl_metrics p
         )
-        SELECT * FROM pnl_metrics ORDER BY entity_code, period_key;
+        SELECT * FROM windowed_metrics ORDER BY entity_code, period_key;
         """
         df = con.execute(query).df()
         con.close()
