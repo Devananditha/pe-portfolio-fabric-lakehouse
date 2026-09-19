@@ -101,6 +101,15 @@ class TestFinancialInvariants:
             null_count = int(gold_covenant_health[col].isna().sum())
             assert null_count == 0, f"Found {null_count} nulls in critical column: {col}"
 
+    def test_silver_lineage_completeness(self, silver_gl: pd.DataFrame):
+        """Verifies 100% of rows in Silver maintain valid _lineage_hash and _source_erp values."""
+        assert "_lineage_hash" in silver_gl.columns
+        assert "_source_erp" in silver_gl.columns
+        assert silver_gl["_lineage_hash"].isna().sum() == 0
+        assert (silver_gl["_lineage_hash"].str.len() == 64).all()  # Valid SHA-256 hex digest length
+        assert silver_gl["_source_erp"].isna().sum() == 0
+        assert (silver_gl["_source_erp"] != "").all()
+
     def test_raw_gl_aggregate_double_entry(self, raw_gl: pd.DataFrame):
         """Total Debits must exactly equal Total Credits across the entire General Ledger."""
         debits = round(raw_gl["debit_amount"].astype(float).sum(), 2)
