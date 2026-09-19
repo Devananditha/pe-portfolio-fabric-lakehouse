@@ -248,6 +248,13 @@ class LineageVarianceGate:
         if not all_passed:
             results["status"] = "FAILED"
 
+        # Check 6: Variance Drift Gate (±15% PoP Swings & Operational Event Correlation)
+        anomalies_df, drift_summary = self.detect_variance_drift(covenant_health)
+        self.export_variance_anomalies_csv(anomalies_df)
+        results["checks"]["variance_drift_gate"] = drift_summary
+        if not drift_summary["passed"]:
+            results["status"] = "FAILED"
+
         # Persist report
         self.reports_dir.mkdir(parents=True, exist_ok=True)
         report_path = self.reports_dir / "lineage_variance_gate_report.json"
