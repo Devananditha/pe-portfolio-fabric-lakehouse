@@ -85,7 +85,9 @@ def run_silver() -> bool:
     pipeline = SilverHarmonizationPipeline()
     gl_df, debt_df = pipeline.run()
     print(f"  [+] Harmonized Silver GL: {len(gl_df):,} transactions translated to USD")
+    print(f"  [+] Partitioned Parquet: data/02_silver/prm_harmonized_financial_ledger.parquet (4 partitions)")
     print(f"  [+] Harmonized Silver Debt Facilities: {len(debt_df):,} facility master rows")
+    print(f"  [+] Silver Audit Summary: reports/silver_harmonization_audit_summary.json")
     return True
 
 
