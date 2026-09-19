@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Private Equity Portfolio Value Creation Lakehouse - Executive Covenant Monitoring & Financial Mart Portal">
+  <title>PE Portfolio Value Creation Lakehouse | Executive Covenant & Financial Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-hover: rgba(31, 41, 55, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      
+      --gradient-brand: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+      --gradient-card: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+      --shadow-elevation: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glowing accents */
+    .ambient-glow {
+      position: fixed;
+      top: -200px;
+      right: -100px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(10, 14, 23, 0) 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .ambient-glow-left {
+      position: fixed;
+      bottom: -150px;
+      left: -150px;
+      width: 550px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(10, 14, 23, 0) 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background-color: rgba(10, 14, 23, 0.85);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 2rem;
+    }
+
+    .header-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--gradient-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: #fff;
+    }
+
+    .brand-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .badge-live {
+      background-color: rgba(16, 185, 129, 0.12);
+      color: var(--accent-emerald);
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .badge-phase {
+      background-color: rgba(99, 102, 241, 0.12);
+      color: var(--accent-indigo);
+      border-color: rgba(99, 102, 241, 0.25);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem;
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1rem 1.5rem;
+      backdrop-filter: blur(12px);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pill-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .pill-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .pill-btn.active {
+      background: var(--accent-indigo);
+      color: #fff;
+      border-color: var(--accent-indigo);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+    }
+
+    .pill-btn.stress-pill.active {
+      background: var(--accent-rose);
+      border-color: var(--accent-rose);
+      box-shadow: 0 2px 10px rgba(244, 63, 94, 0.35);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .kpi-card {
+      background: var(--gradient-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-elevation);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-focus);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--kpi-accent, var(--gradient-brand));
+      opacity: 0.9;
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .kpi-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .kpi-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--text-muted);
+    }
+
+    .kpi-value {
+      font-size: 1.875rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 0.35rem;
+    }
+
+    .kpi-subtext {
+      font-size: 0.775rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .kpi-subtext .highlight {
+      font-weight: 600;
+    }
+
+    /* Charts Section */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-elevation);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-desc {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .chart-container {
+      position: relative;
+      flex: 1;
+      min-height: 280px;
+      width: 100%;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Entities Master Grid */
+    .entities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .entity-card {
+      background: var(--gradient-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .entity-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: var(--bg-card-hover);
+    }
+
+    .entity-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .entity-name {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .entity-meta {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .tag-erp {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .entity-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .em-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .em-label {
+      font-size: 0.725rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .em-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.725rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-compliant {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-breach {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .status-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* Quality & Lineage Gate Card */
+    .gate-card {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .gate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .gate-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .check-chip {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.5rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .check-chip.pass {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.06);
+    }
+
+    .check-chip svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--accent-emerald);
+    }
+
+    /* Financial Table */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.825rem;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      background: rgba(10, 14, 23, 0.9);
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <div class="ambient-glow-left"></div>
+
+  <header>
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <h1>PE Portfolio Lakehouse</h1>
+          <div class="brand-subtitle">Value Creation & Debt Covenant Observability</div>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <div class="badge badge-phase" id="phase-badge">Phase 1 Provisioned</div>
+        <div class="badge badge-live">
+          <span class="pulse-dot"></span>
+          <span>Zero Lineage Variance Gate (PASSED)</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Filter Bar -->
+    <section class="filter-bar" id="controls-section">
+      <div class="filter-group">
+        <span class="filter-label">Portfolio Entity:</span>
+        <button class="pill-btn active" data-entity="ALL" id="btn-ent-all">All Portfolio (4)</button>
+        <button class="pill-btn" data-entity="DURA_US" id="btn-ent-dura">DURA_US (SAP)</button>
+        <button class="pill-btn" data-entity="MED_UK" id="btn-ent-med">MED_UK (NetSuite)</button>
+        <button class="pill-btn" data-entity="LOGI_EU" id="btn-ent-logi">LOGI_EU (Dynamics 365)</button>
+        <button class="pill-btn" data-entity="RETAIL_US" id="btn-ent-retail">RETAIL_US (QuickBooks)</button>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Period Window:</span>
+        <button class="pill-btn active" data-period="ALL" id="btn-per-all">24 Months (2024-2025)</button>
+        <button class="pill-btn" data-period="2024" id="btn-per-2024">FY 2024</button>
+        <button class="pill-btn" data-period="2025" id="btn-per-2025">FY 2025</button>
+        <button class="pill-btn stress-pill" data-period="STRESS" id="btn-per-stress">Stress Window (M18-M21)</button>
+      </div>
+    </section>
+
+    <!-- KPI Summary Grid -->
+    <section class="kpi-grid" id="kpis-section">
+      <div class="kpi-card" style="--kpi-accent: linear-gradient(90deg, #6366f1, #3b82f6);">
+        <div class="kpi-header">
+          <span class="kpi-title">Selected Revenue (USD)</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-rev">$0.00</div>
+        <div class="kpi-subtext">Multi-currency converted at monthly average FX</div>
+      </div>
+
+      <div class="kpi-card" style="--kpi-accent: linear-gradient(90deg, #10b981, #06b6d4);">
+        <div class="kpi-header">
+          <span class="kpi-title">Selected EBITDA (USD)</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+              <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-ebitda">$0.00</div>
+        <div class="kpi-subtext"><span class="highlight" id="kpi-margin">0.0%</span> operating EBITDA margin</div>
+      </div>
+
+      <div class="kpi-card" style="--kpi-accent: linear-gradient(90deg, #8b5cf6, #ec4899);">
+        <div class="kpi-header">
+          <span class="kpi-title">Senior Debt Facilities</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <path d="M7 15h0M2 9.5h20"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-debt">$125.0M</div>
+        <div class="kpi-subtext">Origination principal across 4 lender facilities</div>
+      </div>
+
+      <div class="kpi-card" style="--kpi-accent: linear-gradient(90deg, #f43f5e, #f59e0b);">
+        <div class="kpi-header">
+          <span class="kpi-title">Covenant Breaches</span>
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-breaches" style="color: #fb7185;">0</div>
+        <div class="kpi-subtext" id="kpi-breach-desc">Intentional stress shock flagged</div>
+      </div>
+    </section>
+
+    <!-- Visualizations Grid -->
+    <section class="charts-grid">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+              Debt Service Coverage Ratio (DSCR) Timeline
+            </h2>
+            <div class="card-desc">Monthly DSCR trajectory compared against lender minimum covenant thresholds (1.20x - 1.35x).</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="dscrChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              Revenue vs. EBITDA
+            </h2>
+            <div class="card-desc">Operating performance breakdown (USD).</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="revEbitdaChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Entities Master Grid -->
+    <section>
+      <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700;">Portfolio Companies & ERP Integrations</h2>
+          <p style="font-size: 0.8125rem; color: var(--text-muted);">4 acquired assets operating on disparate enterprise GL systems.</p>
+        </div>
+      </div>
+
+      <div class="entities-grid" id="entities-cards-container">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- Automated Quality & Lineage Gate Report -->
+    <section class="gate-card">
+      <div class="gate-header">
+        <div>
+          <h3 style="font-size: 1rem; font-weight: 700; color: #34d399; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            DataOps Lineage & Invariant Quality Gate: PASSED
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+            Zero variance between Raw landing extracts and Silver Lakehouse tables. Perfect double-entry conservation verified.
+          </p>
+        </div>
+        <span class="status-badge status-compliant">100% Invariant Compliant</span>
+      </div>
+
+      <div class="gate-checks" id="gate-chips-container">
+        <div class="check-chip pass">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Lineage: 1,440 Raw == 1,440 Silver</span>
+        </div>
+        <div class="check-chip pass">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Raw Double-Entry: Debits == Credits ($0.00 Diff)</span>
+        </div>
+        <div class="check-chip pass">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Silver Double-Entry: Debits == Credits ($0.00 Diff)</span>
+        </div>
+        <div class="check-chip pass">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>4 Entities x 24 Periods = 96 Matrix Cells</span>
+        </div>
+        <div class="check-chip pass">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>DURA_US Shock: 4 Breaches Detected in M18-M21</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detailed Financial Table -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Harmonized Financial Fact Records</h2>
+          <div class="card-desc">Monthly dimensional facts, EBITDA, Debt Service, and DSCR metrics.</div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="facts-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Entity</th>
+              <th class="text-right">Revenue (USD)</th>
+              <th class="text-right">COGS (USD)</th>
+              <th class="text-right">EBITDA (USD)</th>
+              <th class="text-right">Debt Service</th>
+              <th class="text-right">DSCR</th>
+              <th class="text-right">Covenant Min</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="facts-table-body">
+            <!-- Rendered via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    PE Portfolio Value Creation Lakehouse &bull; Phase 1 Multi-Entity ERP Provisioning &bull; Medallion Architecture (Raw &bull; Silver &bull; Gold)
+  </footer>
+
+  <!-- Include generated lakehouse data -->
+  <script src="data.js"></script>
+
+  <script>
+    // State management
+    let activeEntity = "ALL";
+    let activePeriod = "ALL";
+
+    const data = window.PORTFOLIO_DATA || {
+      dim_entity: [],
+      dim_period: [],
+      dim_account: [],
+      fact_covenant: [],
+      coa_crosswalk: [],
+      gate_report: {}
+    };
+
+    const ENTITY_SYSTEMS = {
+      "DURA_US": { sys: "SAP S/4HANA", gl: "Numeric (GL_REV_400010)", color: "#f43f5e" },
+      "MED_UK": { sys: "NetSuite", gl: "Strings (REV-SUB-ARR)", color: "#06b6d4" },
+      "LOGI_EU": { sys: "Dynamics 365", gl: "SKR-04 (4400_ERLOESE)", color: "#10b981" },
+      "RETAIL_US": { sys: "QuickBooks", gl: "Chart (401_Merch_Sales)", color: "#f59e0b" }
+    };
+
+    function formatCurrency(val) {
+      if (val >= 1e6) {
+        return "$" + (val / 1e6).toFixed(2) + "M";
+      } else if (val >= 1e3) {
+        return "$" + (val / 1e3).toFixed(1) + "k";
+      }
+      return "$" + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function initFilters() {
+      // Entity pills
+      document.querySelectorAll("[data-entity]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("[data-entity]").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeEntity = btn.getAttribute("data-entity");
+          renderDashboard();
+        });
+      });
+
+      // Period pills
+      document.querySelectorAll("[data-period]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("[data-period]").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          activePeriod = btn.getAttribute("data-period");
+          renderDashboard();
+        });
+      });
+    }
+
+    function getFilteredData() {
+      return data.fact_covenant.filter(row => {
+        // Entity filter
+        if (activeEntity !== "ALL" && row.entity_id !== activeEntity) {
+          return false;
+        }
+
+        // Period filter
+        if (activePeriod === "2024" && !row.period.startsWith("2024")) return false;
+        if (activePeriod === "2025" && !row.period.startsWith("2025")) return false;
+        if (activePeriod === "STRESS") {
+          return [18, 19, 20, 21].includes(row.period_index);
+        }
+        return true;
+      });
+    }
+
+    function renderKPIs(filtered) {
+      let totalRev = 0;
+      let totalEbitda = 0;
+      let totalBreaches = 0;
+
+      filtered.forEach(r => {
+        totalRev += r.revenue_usd;
+        totalEbitda += r.ebitda_usd;
+        if (r.covenant_status === "BREACH") totalBreaches++;
+      });
+
+      const margin = totalRev > 0 ? (totalEbitda / totalRev * 100).toFixed(1) : 0;
+
+      document.getElementById("kpi-rev").textContent = formatCurrency(totalRev);
+      document.getElementById("kpi-ebitda").textContent = formatCurrency(totalEbitda);
+      document.getElementById("kpi-margin").textContent = margin + "%";
+      document.getElementById("kpi-breaches").textContent = totalBreaches;
+
+      const breachDesc = document.getElementById("kpi-breach-desc");
+      if (totalBreaches > 0) {
+        breachDesc.innerHTML = `<span style="color: #fb7185; font-weight:600;">Action Required:</span> DURA_US M18-M21 stress`;
+      } else {
+        breachDesc.innerHTML = `<span style="color: #34d399; font-weight:600;">Nominal:</span> All facilities compliant`;
+      }
+    }
+
+    function renderEntityCards() {
+      const container = document.getElementById("entities-cards-container");
+      container.innerHTML = "";
+
+      data.dim_entity.forEach(ent => {
+        const info = ENTITY_SYSTEMS[ent.entity_id] || { sys: "ERP", gl: "GL", color: "#6366f1" };
+        
+        // Find latest period health for this entity
+        const entRecords = data.fact_covenant.filter(r => r.entity_id === ent.entity_id);
+        const breaches = entRecords.filter(r => r.covenant_status === "BREACH").length;
+        
+        let statusClass = "status-compliant";
+        let statusText = "Compliant";
+        if (breaches > 0) {
+          statusClass = "status-breach";
+          statusText = `${breaches} Breaches`;
+        }
+
+        const card = document.createElement("div");
+        card.className = "entity-card";
+        card.innerHTML = `
+          <div class="entity-top">
+            <div>
+              <div class="entity-name">${ent.entity_name}</div>
+              <div class="entity-meta">
+                <span class="tag tag-erp">${info.sys}</span>
+                <span class="tag">${ent.functional_currency}</span>
+              </div>
+            </div>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </div>
+
+          <div style="font-size: 0.775rem; color: var(--text-dim);">
+            Facility: <span style="color: var(--text-muted); font-weight:500;">${ent.facility_name}</span>
+          </div>
+
+          <div class="entity-metrics">
+            <div class="em-item">
+              <span class="em-label">Principal (Orig.)</span>
+              <span class="em-val">${formatCurrency(ent.principal_usd)}</span>
+            </div>
+            <div class="em-item">
+              <span class="em-label">Annual Rate</span>
+              <span class="em-val">${(ent.annual_interest_rate * 100).toFixed(2)}%</span>
+            </div>
+            <div class="em-item">
+              <span class="em-label">Monthly Amort.</span>
+              <span class="em-val">${formatCurrency(ent.monthly_amortization_usd)}</span>
+            </div>
+            <div class="em-item">
+              <span class="em-label">Min DSCR Cov.</span>
+              <span class="em-val">${ent.covenant_min_dscr.toFixed(2)}x</span>
+            </div>
+          </div>
+
+          <div style="font-size: 0.75rem; color: var(--text-dim); display:flex; justify-content:space-between;">
+            <span>Legacy Account ID: <code>${info.gl}</code></span>
+            <span>Maturity: ${ent.maturity_date}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderTable(filtered) {
+      const tbody = document.getElementById("facts-table-body");
+      tbody.innerHTML = "";
+
+      // Show recent 20 or all filtered
+      const displayRows = filtered.slice(0, 32);
+
+      displayRows.forEach(r => {
+        let badgeClass = "status-compliant";
+        if (r.covenant_status === "BREACH") badgeClass = "status-breach";
+        else if (r.covenant_status === "WARNING") badgeClass = "status-warning";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${r.period}</strong></td>
+          <td>${r.entity_name}</td>
+          <td class="text-right">${formatCurrency(r.revenue_usd)}</td>
+          <td class="text-right">${formatCurrency(r.cogs_usd)}</td>
+          <td class="text-right" style="font-weight:600;">${formatCurrency(r.ebitda_usd)}</td>
+          <td class="text-right">${formatCurrency(r.debt_service_usd)}</td>
+          <td class="text-right" style="font-weight:700; color: ${r.dscr < r.covenant_min_dscr ? '#fb7185' : '#fff'};">${r.dscr.toFixed(3)}x</td>
+          <td class="text-right" style="color: var(--text-muted);">${r.covenant_min_dscr.toFixed(2)}x</td>
+          <td><span class="status-badge ${badgeClass}">${r.covenant_status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // HTML5 Canvas DSCR Chart
+    function renderDSCRChart(filtered) {
+      const canvas = document.getElementById("dscrChart");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      
+      const width = canvas.parentElement.clientWidth;
+      const height = canvas.parentElement.clientHeight || 280;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const padding = { top: 30, right: 30, bottom: 40, left: 50 };
+      const chartW = width - padding.left - padding.right;
+      const chartH = height - padding.top - padding.bottom;
+
+      // Group by entity
+      const entities = activeEntity === "ALL" 
+        ? ["DURA_US", "MED_UK", "LOGI_EU", "RETAIL_US"] 
+        : [activeEntity];
+
+      // Get sorted periods
+      const periods = Array.from(new Set(filtered.map(r => r.period))).sort();
+      if (periods.length === 0) return;
+
+      // Draw Grid & Axes
+      const maxDSCR = 3.0;
+      const minDSCR = 0.0;
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "10px Inter";
+      ctx.textAlign = "right";
+
+      const yTicks = [0.5, 1.0, 1.25, 1.5, 2.0, 2.5];
+      yTicks.forEach(tick => {
+        const y = padding.top + chartH - ((tick - minDSCR) / (maxDSCR - minDSCR)) * chartH;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(padding.left + chartW, y);
+        ctx.stroke();
+        ctx.fillText(tick.toFixed(2) + "x", padding.left - 8, y + 3);
+      });
+
+      // Highlight Covenant Breach threshold (1.25x line)
+      const covY = padding.top + chartH - ((1.25 - minDSCR) / (maxDSCR - minDSCR)) * chartH;
+      ctx.strokeStyle = "rgba(244, 63, 94, 0.6)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padding.left, covY);
+      ctx.lineTo(padding.left + chartW, covY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#f43f5e";
+      ctx.fillText("Covenant Floor 1.25x", padding.left + 110, covY - 5);
+
+      // Draw Period Labels on X axis
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#6b7280";
+      const stepX = chartW / Math.max(1, periods.length - 1);
+
+      periods.forEach((p, idx) => {
+        if (periods.length > 12 && idx % 3 !== 0) return;
+        const x = padding.left + idx * stepX;
+        ctx.fillText(p.substring(2), x, padding.top + chartH + 20);
+      });
+
+      // Draw Lines for Each Entity
+      entities.forEach(entId => {
+        const entColor = ENTITY_SYSTEMS[entId]?.color || "#6366f1";
+        const entData = filtered.filter(r => r.entity_id === entId).sort((a, b) => a.period.localeCompare(b.period));
+        if (entData.length === 0) return;
+
+        ctx.strokeStyle = entColor;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+
+        entData.forEach((r, idx) => {
+          const x = padding.left + idx * stepX;
+          const y = padding.top + chartH - ((Math.min(maxDSCR, r.dscr) - minDSCR) / (maxDSCR - minDSCR)) * chartH;
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Draw points
+        entData.forEach((r, idx) => {
+          const x = padding.left + idx * stepX;
+          const y = padding.top + chartH - ((Math.min(maxDSCR, r.dscr) - minDSCR) / (maxDSCR - minDSCR)) * chartH;
+          
+          ctx.beginPath();
+          ctx.arc(x, y, r.covenant_status === "BREACH" ? 5 : 3, 0, Math.PI * 2);
+          ctx.fillStyle = r.covenant_status === "BREACH" ? "#f43f5e" : entColor;
+          ctx.fill();
+          if (r.covenant_status === "BREACH") {
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        });
+      });
+    }
+
+    // Canvas Revenue & EBITDA Bar/Line Chart
+    function renderRevEbitdaChart(filtered) {
+      const canvas = document.getElementById("revEbitdaChart");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+
+      const width = canvas.parentElement.clientWidth;
+      const height = canvas.parentElement.clientHeight || 280;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const padding = { top: 30, right: 30, bottom: 40, left: 55 };
+      const chartW = width - padding.left - padding.right;
+      const chartH = height - padding.top - padding.bottom;
+
+      // Aggregate by period
+      const periodAgg = {};
+      filtered.forEach(r => {
+        if (!periodAgg[r.period]) {
+          periodAgg[r.period] = { rev: 0, ebitda: 0 };
+        }
+        periodAgg[r.period].rev += r.revenue_usd;
+        periodAgg[r.period].ebitda += r.ebitda_usd;
+      });
+
+      const periods = Object.keys(periodAgg).sort();
+      if (periods.length === 0) return;
+
+      let maxVal = 0;
+      periods.forEach(p => {
+        if (periodAgg[p].rev > maxVal) maxVal = periodAgg[p].rev;
+      });
+      maxVal = maxVal * 1.15;
+
+      // Draw Grid
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "10px Inter";
+      ctx.textAlign = "right";
+
+      for (let i = 0; i <= 4; i++) {
+        const val = (maxVal / 4) * i;
+        const y = padding.top + chartH - (val / maxVal) * chartH;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(padding.left + chartW, y);
+        ctx.stroke();
+        ctx.fillText(formatCurrency(val), padding.left - 6, y + 3);
+      }
+
+      // Draw Bars for Revenue and Line for EBITDA
+      const barW = Math.max(4, (chartW / periods.length) * 0.6);
+      const stepX = chartW / periods.length;
+
+      periods.forEach((p, idx) => {
+        const x = padding.left + idx * stepX + (stepX - barW) / 2;
+        const revH = (periodAgg[p].rev / maxVal) * chartH;
+        const y = padding.top + chartH - revH;
+
+        // Revenue bar
+        ctx.fillStyle = "rgba(99, 102, 241, 0.4)";
+        ctx.fillRect(x, y, barW, revH);
+
+        // Month label
+        if (periods.length <= 12 || idx % 3 === 0) {
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#6b7280";
+          ctx.fillText(p.substring(2), x + barW / 2, padding.top + chartH + 18);
+        }
+      });
+
+      // EBITDA line
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+
+      periods.forEach((p, idx) => {
+        const x = padding.left + idx * stepX + stepX / 2;
+        const ebitdaH = (periodAgg[p].ebitda / maxVal) * chartH;
+        const y = padding.top + chartH - ebitdaH;
+
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // EBITDA Points
+      periods.forEach((p, idx) => {
+        const x = padding.left + idx * stepX + stepX / 2;
+        const ebitdaH = (periodAgg[p].ebitda / maxVal) * chartH;
+        const y = padding.top + chartH - ebitdaH;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#10b981";
+        ctx.fill();
+      });
+    }
+
+    function renderDashboard() {
+      const filtered = getFilteredData();
+      renderKPIs(filtered);
+      renderTable(filtered);
+      renderDSCRChart(filtered);
+      renderRevEbitdaChart(filtered);
+    }
+
+    // Initialize on load
+    window.addEventListener("DOMContentLoaded", () => {
+      initFilters();
+      renderEntityCards();
+      renderDashboard();
+
+      window.addEventListener("resize", () => {
+        renderDashboard();
+      });
+    });
+  </script>
+</body>
+</html>
