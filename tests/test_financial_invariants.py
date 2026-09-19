@@ -81,6 +81,19 @@ class TestFinancialInvariants:
                 f"Gross Profit ({gp}) > Revenue ({rev})"
             )
 
+    def test_ebitda_consistency_formula(self, gold_covenant_health: pd.DataFrame):
+        """EBITDA must exactly equal Revenue - COGS - OPEX across all Gold rows."""
+        for _, row in gold_covenant_health.iterrows():
+            rev = float(row["revenue"])
+            cogs = float(row["cogs"])
+            opex = float(row["opex"])
+            ebitda = float(row["ebitda"])
+            expected_ebitda = round(rev - cogs - opex, 2)
+            assert abs(ebitda - expected_ebitda) < 0.05, (
+                f"EBITDA formula mismatch for {row['entity_code']} {row['period_key']}: "
+                f"expected {expected_ebitda}, got {ebitda}"
+            )
+
     def test_raw_gl_aggregate_double_entry(self, raw_gl: pd.DataFrame):
         """Total Debits must exactly equal Total Credits across the entire General Ledger."""
         debits = round(raw_gl["debit_amount"].astype(float).sum(), 2)
