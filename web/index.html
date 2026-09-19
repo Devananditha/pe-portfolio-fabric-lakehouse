@@ -358,6 +358,139 @@
       background-color: rgba(158, 42, 43, 0.1);
       color: var(--terracotta-alert);
     }
+
+    /* What-If Scenario Control Panel */
+    .scenario-panel {
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .scenario-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-stone);
+      padding-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .scenario-title-area h2 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--text-pine);
+    }
+
+    .scenario-title-area p {
+      font-size: 0.875rem;
+      color: var(--text-stone);
+      margin-top: 0.2rem;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .scenario-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .scenario-control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .control-name {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-pine);
+    }
+
+    .control-value-badge {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--pine-primary);
+      background-color: var(--pine-light);
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(35, 78, 62, 0.2);
+    }
+
+    .slider-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: var(--border-stone);
+      border-radius: 3px;
+      outline: none;
+      transition: background 0.15s ease;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--pine-primary);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(27, 46, 38, 0.3);
+      border: 2px solid #FFFFFF;
+      transition: transform 0.1s ease;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: var(--pine-hover);
+    }
+
+    .control-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .presets-row {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.25rem;
+    }
+
+    .btn-preset {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-stone);
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text-stone);
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-preset:hover {
+      background: var(--pine-light);
+      color: var(--pine-primary);
+      border-color: rgba(35, 78, 62, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -465,7 +598,73 @@
         </div>
       </section>
 
-      <!-- Content sections will be added in subsequent commits -->
+      <!-- What-If Value-Creation Scenario Controls -->
+      <section class="editorial-card scenario-panel" id="scenario-panel">
+        <div class="scenario-header">
+          <div class="scenario-title-area">
+            <h2>Value Creation Scenario Engine &bull; What-If Stress Modeling</h2>
+            <p>Dynamically simulate operational synergy capture, senior debt refinancing spreads, and commercial pricing levers across acquired entities.</p>
+          </div>
+          <div>
+            <button id="btn-reset-scenario" class="btn-editorial" onclick="resetScenarioControls()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Reset to Baseline
+            </button>
+          </div>
+        </div>
+
+        <div class="scenario-grid">
+          <!-- Slider 1: Synergy Cost Reduction -->
+          <div class="scenario-control">
+            <div class="control-label-row">
+              <span class="control-name">Synergy Cost Reduction</span>
+              <span class="control-value-badge" id="val-synergy">0.0%</span>
+            </div>
+            <input type="range" min="0" max="15" step="0.5" value="0" id="slider-synergy" class="slider-input">
+            <div class="control-desc">Consolidated SG&A / Procurement / IT integration OPEX savings.</div>
+            <div class="presets-row">
+              <button class="btn-preset" onclick="setPreset('synergy', 0)">0% (Base)</button>
+              <button class="btn-preset" onclick="setPreset('synergy', 5)">5% (Target)</button>
+              <button class="btn-preset" onclick="setPreset('synergy', 10)">10% (Aggressive)</button>
+              <button class="btn-preset" onclick="setPreset('synergy', 15)">15% (Max)</button>
+            </div>
+          </div>
+
+          <!-- Slider 2: Debt Refinancing Spread -->
+          <div class="scenario-control">
+            <div class="control-label-row">
+              <span class="control-name">Debt Refinance Spread</span>
+              <span class="control-value-badge" id="val-spread">0 bps</span>
+            </div>
+            <input type="range" min="-150" max="200" step="10" value="0" id="slider-spread" class="slider-input">
+            <div class="control-desc">Capital markets repricing or benchmark credit spread adjustment.</div>
+            <div class="presets-row">
+              <button class="btn-preset" onclick="setPreset('spread', -100)">-100 bps (Favorable)</button>
+              <button class="btn-preset" onclick="setPreset('spread', 0)">0 bps (Current)</button>
+              <button class="btn-preset" onclick="setPreset('spread', 100)">+100 bps (Tightening)</button>
+              <button class="btn-preset" onclick="setPreset('spread', 200)">+200 bps (Stress)</button>
+            </div>
+          </div>
+
+          <!-- Slider 3: Pricing Power Multiplier -->
+          <div class="scenario-control">
+            <div class="control-label-row">
+              <span class="control-name">Pricing Power Multiplier</span>
+              <span class="control-value-badge" id="val-pricing">1.00x</span>
+            </div>
+            <input type="range" min="0.95" max="1.15" step="0.01" value="1.00" id="slider-pricing" class="slider-input">
+            <div class="control-desc">Contractual price elasticity and gross margin expansion pass-through.</div>
+            <div class="presets-row">
+              <button class="btn-preset" onclick="setPreset('pricing', 0.95)">0.95x (Defensive)</button>
+              <button class="btn-preset" onclick="setPreset('pricing', 1.00)">1.00x (Base)</button>
+              <button class="btn-preset" onclick="setPreset('pricing', 1.05)">1.05x (Growth)</button>
+              <button class="btn-preset" onclick="setPreset('pricing', 1.10)">1.10x (Power)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Additional content sections -->
     </main>
   </div>
 
