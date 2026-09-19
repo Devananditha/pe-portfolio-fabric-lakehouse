@@ -86,8 +86,25 @@ class GoldDimensionalModelingPipeline:
                 SUM(CASE WHEN financial_statement_line = 'INTEREST_EXPENSE' THEN amount_usd ELSE 0.0 END) AS interest_expense
             FROM silver_ledger
             GROUP BY 1, 2
+        ),
+        pnl_metrics AS (
+            -- CTE 2: Compute core profitability metrics and margins
+            SELECT
+                entity_code,
+                period_key,
+                ROUND(revenue, 2) AS revenue,
+                ROUND(cogs, 2) AS cogs,
+                ROUND(opex, 2) AS opex,
+                ROUND(da, 2) AS da,
+                ROUND(interest_expense, 2) AS interest_expense,
+                ROUND(revenue - cogs, 2) AS gross_profit,
+                ROUND(CASE WHEN revenue > 0 THEN ((revenue - cogs) / revenue) * 100.0 ELSE 0.0 END, 2) AS gross_margin_pct,
+                ROUND(revenue - cogs - opex, 2) AS ebitda,
+                ROUND(revenue - cogs - opex - da, 2) AS ebit,
+                ROUND(CASE WHEN revenue > 0 THEN ((revenue - cogs - opex) / revenue) * 100.0 ELSE 0.0 END, 2) AS ebitda_margin_pct
+            FROM monthly_lines
         )
-        SELECT * FROM monthly_lines ORDER BY entity_code, period_key;
+        SELECT * FROM pnl_metrics ORDER BY entity_code, period_key;
         """
         df = con.execute(query).df()
         con.close()
