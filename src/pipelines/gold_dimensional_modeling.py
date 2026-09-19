@@ -351,25 +351,34 @@ class GoldDimensionalModelingPipeline:
 
     def run(self) -> Dict[str, pd.DataFrame]:
         """Executes full Gold dimensional modeling and persists Parquet datasets."""
+        logger.info("=" * 70)
+        logger.info("Executing Phase 3: Gold Analytical Mart, SQL Window Functions & Covenant Modeling")
+        logger.info("=" * 70)
+
         self.gold_dir.mkdir(parents=True, exist_ok=True)
         gl_silver, debt_silver = self.silver_pipeline.run()
+
+        # Execute DuckDB SQL Analytical Mart
+        covenant_health_df = self.execute_covenant_health_sql(gl_silver, debt_silver)
 
         dim_entity = self.build_dim_entity(debt_silver)
         dim_period = self.build_dim_period(gl_silver)
         dim_account = self.build_dim_account(gl_silver)
         fact_financial = self.build_fact_financial_monthly(gl_silver)
-        fact_covenant = self.build_fact_covenant_health(fact_financial, dim_entity, dim_period)
 
         models = {
             "dim_entity": dim_entity,
             "dim_period": dim_period,
             "dim_account": dim_account,
             "fact_financial_monthly": fact_financial,
-            "fact_covenant_health": fact_covenant,
+            "fact_covenant_health": covenant_health_df,
+            "feat_portfolio_covenant_health": covenant_health_df,
         }
 
         for name, df in models.items():
-            df.to_parquet(self.gold_dir / f"{name}.parquet", index=False)
+            out_parquet = self.gold_dir / f"{name}.parquet"
+            df.to_parquet(out_parquet, index=False)
+            logger.info(f"Persisted Gold Mart: {out_parquet.name} ({len(df)} records)")
 
         return models
 
