@@ -204,3 +204,18 @@ class TestFinancialInvariants:
             else:
                 # Normal operational periods must be compliant
                 assert dscr >= min_dscr, f"Unexpected covenant breach in period {p} (month {idx}): DSCR {dscr:.2f} < {min_dscr}"
+
+    def test_stress_scenario_breach_alert_detection(self, gold_covenant_health: pd.DataFrame):
+        """Asserts that the intentional stress scenario in DURA_US correctly triggers BREACH_ALERT for months 18-21."""
+        dura = gold_covenant_health[
+            (gold_covenant_health["entity_code"] == "DURA_US") &
+            (gold_covenant_health["period_index"].isin([18, 19, 20, 21]))
+        ]
+        assert len(dura) == 4, f"Expected 4 stress months, got {len(dura)}"
+        for _, row in dura.iterrows():
+            assert row["covenant_health_status"] == "BREACH_ALERT", (
+                f"Expected BREACH_ALERT in period {row['period_key']}, got {row['covenant_health_status']}"
+            )
+            assert row["dscr"] < row["covenant_min_dscr"], (
+                f"Expected DSCR breach in period {row['period_key']}, but DSCR was {row['dscr']}"
+            )
