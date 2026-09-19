@@ -113,7 +113,19 @@ class GoldDimensionalModelingPipeline:
                     PARTITION BY p.entity_code 
                     ORDER BY p.period_key 
                     ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
-                ), 2) AS rolling_3m_ebitda
+                ), 2) AS rolling_3m_ebitda,
+                -- Trailing Twelve Months (TTM) Revenue
+                ROUND(SUM(p.revenue) OVER (
+                    PARTITION BY p.entity_code 
+                    ORDER BY p.period_key 
+                    ROWS BETWEEN 11 PRECEDING AND CURRENT ROW
+                ), 2) AS ttm_revenue,
+                -- Trailing Twelve Months (TTM) EBITDA
+                ROUND(SUM(p.ebitda) OVER (
+                    PARTITION BY p.entity_code 
+                    ORDER BY p.period_key 
+                    ROWS BETWEEN 11 PRECEDING AND CURRENT ROW
+                ), 2) AS ttm_ebitda
             FROM pnl_metrics p
         )
         SELECT * FROM windowed_metrics ORDER BY entity_code, period_key;
