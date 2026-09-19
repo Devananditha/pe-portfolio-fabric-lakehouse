@@ -257,6 +257,107 @@
       border: 1px solid var(--border-stone);
       color: var(--text-stone);
     }
+
+    /* KPI Cards Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kpi-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .kpi-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-stone);
+    }
+
+    .kpi-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-subtle);
+      color: var(--pine-primary);
+    }
+
+    .kpi-value {
+      font-family: var(--font-serif);
+      font-size: 2.25rem;
+      font-weight: 500;
+      color: var(--text-pine);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .kpi-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-stone);
+      padding-top: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .trend-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .trend-positive {
+      color: var(--sage-accent);
+    }
+
+    .kpi-alert-card.has-breach {
+      border-color: var(--terracotta-alert);
+      background-color: var(--terracotta-bg);
+    }
+
+    .kpi-alert-card.has-breach .kpi-value {
+      color: var(--terracotta-alert);
+    }
+
+    .kpi-alert-card.has-breach .kpi-icon {
+      background-color: rgba(158, 42, 43, 0.1);
+      color: var(--terracotta-alert);
+    }
   </style>
 </head>
 <body>
@@ -305,9 +406,113 @@
     </header>
 
     <main id="main-content">
-      <!-- Executive Dashboard Content -->
+      <!-- 4 Top Executive KPI Cards -->
+      <section class="kpi-grid">
+        <div class="editorial-card kpi-card" id="kpi-card-revenue">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Consolidated TTM Revenue</span>
+            <div class="kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpi-ttm-revenue">$0.0M</div>
+          <div class="kpi-footer">
+            <span>Standardized Reporting USD</span>
+            <span class="trend-indicator trend-positive" id="kpi-revenue-trend">&uarr; Trailing 12M</span>
+          </div>
+        </div>
+
+        <div class="editorial-card kpi-card" id="kpi-card-ebitda">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Portfolio EBITDA Margin</span>
+            <div class="kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpi-ebitda-margin">0.0%</div>
+          <div class="kpi-footer">
+            <span>Portfolio Weighted Margin</span>
+            <span class="trend-indicator trend-positive">&ge; 28.0% Benchmark</span>
+          </div>
+        </div>
+
+        <div class="editorial-card kpi-card" id="kpi-card-debt">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Total Debt Outstanding</span>
+            <div class="kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h0M2 10h20"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpi-total-debt">$125.0M</div>
+          <div class="kpi-footer">
+            <span>Senior Term Facilities</span>
+            <span>4 Credit Agreements</span>
+          </div>
+        </div>
+
+        <div class="editorial-card kpi-card kpi-alert-card" id="kpi-card-breaches">
+          <div class="kpi-card-header">
+            <span class="kpi-label">Active Covenant Breaches</span>
+            <div class="kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpi-active-breaches">0</div>
+          <div class="kpi-footer">
+            <span>Statutory DSCR Limits</span>
+            <span id="kpi-breach-status-text">All Entities Compliant</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content sections will be added in subsequent commits -->
     </main>
   </div>
+
   <script src="data.js"></script>
+  <script>
+    // Initial State & KPI Binding Logic
+    function formatCurrencyM(val) {
+      return '$' + (val / 1000000).toFixed(1) + 'M';
+    }
+
+    function initTopKpis() {
+      if (!window.PORTFOLIO_DATA || !window.PORTFOLIO_DATA.feat_covenant) return;
+      const feat = window.PORTFOLIO_DATA.feat_covenant;
+      const dimEntity = window.PORTFOLIO_DATA.dim_entity || [];
+      
+      // Calculate latest month (2025-12 or max period)
+      const periods = [...new Set(feat.map(r => r.period_key))].sort();
+      const latestPeriod = periods[periods.length - 1];
+      const latestRows = feat.filter(r => r.period_key === latestPeriod);
+
+      const totalTTMRevenue = latestRows.reduce((acc, r) => acc + (Number(r.ttm_revenue) || 0), 0);
+      const totalTTMEbitda = latestRows.reduce((acc, r) => acc + (Number(r.ttm_ebitda) || 0), 0);
+      const aggregateMargin = totalTTMRevenue > 0 ? (totalTTMEbitda / totalTTMRevenue * 100) : 0;
+      const totalDebt = dimEntity.reduce((acc, e) => acc + (Number(e.principal_usd) || 0), 0);
+      const activeBreaches = latestRows.filter(r => r.covenant_health_status === 'BREACH_ALERT' || r.is_breach == 1).length;
+
+      document.getElementById('kpi-ttm-revenue').textContent = formatCurrencyM(totalTTMRevenue);
+      document.getElementById('kpi-ebitda-margin').textContent = aggregateMargin.toFixed(1) + '%';
+      document.getElementById('kpi-total-debt').textContent = formatCurrencyM(totalDebt);
+      
+      const breachElem = document.getElementById('kpi-active-breaches');
+      const breachCard = document.getElementById('kpi-card-breaches');
+      const breachStatusText = document.getElementById('kpi-breach-status-text');
+      breachElem.textContent = activeBreaches;
+      
+      if (activeBreaches > 0) {
+        breachCard.classList.add('has-breach');
+        breachStatusText.textContent = `${activeBreaches} Entity Below Min DSCR`;
+      } else {
+        breachCard.classList.remove('has-breach');
+        breachStatusText.textContent = 'All Entities Compliant';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initTopKpis();
+    });
+  </script>
 </body>
 </html>
