@@ -72,8 +72,26 @@ class GoldDimensionalModelingPipeline:
         con = self.get_duckdb_connection()
         con.register("silver_ledger", gl_silver)
         con.register("debt_master", debt_covenants)
-        # SQL CTE query will be built here
-        return pd.DataFrame()
+
+        query = """
+        WITH monthly_lines AS (
+            -- CTE 1: Aggregate monthly financial statement line amounts
+            SELECT
+                COALESCE(entity_code, entity_id) AS entity_code,
+                COALESCE(period_key, period) AS period_key,
+                SUM(CASE WHEN financial_statement_line = 'REVENUE' THEN amount_usd ELSE 0.0 END) AS revenue,
+                SUM(CASE WHEN financial_statement_line = 'COGS' THEN amount_usd ELSE 0.0 END) AS cogs,
+                SUM(CASE WHEN financial_statement_line = 'OPEX' THEN amount_usd ELSE 0.0 END) AS opex,
+                SUM(CASE WHEN financial_statement_line IN ('DEPRECIATION', 'AMORTIZATION') THEN amount_usd ELSE 0.0 END) AS da,
+                SUM(CASE WHEN financial_statement_line = 'INTEREST_EXPENSE' THEN amount_usd ELSE 0.0 END) AS interest_expense
+            FROM silver_ledger
+            GROUP BY 1, 2
+        )
+        SELECT * FROM monthly_lines ORDER BY entity_code, period_key;
+        """
+        df = con.execute(query).df()
+        con.close()
+        return df
 
     def build_dim_entity(self, debt_silver: pd.DataFrame) -> pd.DataFrame:
         """Constructs dim_entity containing entity metadata and debt covenant parameters."""
