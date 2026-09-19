@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-09-19T22:59:52.963498+00:00",
+  "pipeline": "SilverHarmonizationPipeline",
+  "total_records": 1440,
+  "total_gross_volume_usd": 1574698203.85,
+  "entities": {
+    "DURA_US": {
+      "source_erp": "SAP",
+      "functional_currency": "USD",
+      "row_count": 360,
+      "revenue_usd_volume": 82296530.03,
+      "cost_usd_volume": 67715542.38,
+      "total_usd_volume": 544730092.12
+    },
+    "LOGI_EU": {
+      "source_erp": "Dynamics365",
+      "functional_currency": "EUR",
+      "row_count": 360,
+      "revenue_usd_volume": 71702721.55,
+      "cost_usd_volume": 58089324.51,
+      "total_usd_volume": 470755314.43
+    },
+    "MED_UK": {
+      "source_erp": "NetSuite",
+      "functional_currency": "GBP",
+      "row_count": 360,
+      "revenue_usd_volume": 58368670.99,
+      "cost_usd_volume": 44527542.57,
+      "total_usd_volume": 361326736.48
+    },
+    "RETAIL_US": {
+      "source_erp": "QuickBooks",
+      "functional_currency": "USD",
+      "row_count": 360,
+      "revenue_usd_volume": 30503026.01,
+      "cost_usd_volume": 24982931.44,
+      "total_usd_volume": 197886060.82
+    }
+  }
+}
