@@ -159,38 +159,37 @@ class SilverHarmonizationPipeline:
             missing = unmapped[["entity_code", "raw_account_code"]].drop_duplicates().to_dict(orient="records")
             raise ValueError(f"COA Crosswalk Failure: Found {len(unmapped)} records with unmapped accounts: {missing}")
 
-        # Join FX conversion rates (to USD)
-        fx_clean = fx_df[fx_df["to_currency"] == "USD"][[
-            "period", "from_currency", "spot_rate", "avg_rate"
-        ]].copy()
-        fx_clean["spot_rate"] = pd.to_numeric(fx_clean["spot_rate"], errors="raise")
-        fx_clean["avg_rate"] = pd.to_numeric(fx_clean["avg_rate"], errors="raise")
+        # 2. Extract period_key and join with FX rates
+        harmonized["period_key"] = harmonized["posting_date"].str[:7]
 
+        fx = fx_df[fx_df["to_currency"] == "USD"].copy()
+        fx["spot_rate"] = pd.to_numeric(fx["spot_rate"], errors="raise")
+        fx["avg_rate"] = pd.to_numeric(fx["avg_rate"], errors="raise")
+
+        fx_to_join = fx[["period", "from_currency", "spot_rate", "avg_rate"]].rename(columns={"period": "fx_period"})
         harmonized = harmonized.merge(
-            fx_clean,
-            left_on=["period", "currency"],
-            right_on=["period", "from_currency"],
+            fx_to_join,
+            left_on=["period_key", "currency"],
+            right_on=["fx_period", "from_currency"],
             how="left"
         )
 
-        # Assertion: zero missing FX rates
+        # Invariant: Zero missing FX rates
         missing_fx = harmonized[harmonized["avg_rate"].isna()]
         if not missing_fx.empty:
-            missing_combos = missing_fx[["period", "currency"]].drop_duplicates().to_dict(orient="records")
-            raise ValueError(f"Missing FX conversion rates for: {missing_combos}")
+            missing_tuples = missing_fx[["period_key", "currency"]].drop_duplicates().to_dict(orient="records")
+            raise ValueError(f"FX Cross-Rate Failure: Missing FX conversion rates for: {missing_tuples}")
 
-        # Compute reporting currency (USD) conversions
-        # Income Statement uses average monthly rate; Balance Sheet uses spot rate
-        is_mask = harmonized["financial_statement"] == "Income_Statement"
-        effective_fx = np.where(is_mask, harmonized["avg_rate"], harmonized["spot_rate"])
+        # Multi-currency translation to USD: amount_usd = amount_local_currency * avg_rate
+        # For Income statement transactions, use avg_rate; for balance sheet items, spot_rate
+        is_pnl = harmonized["financial_statement"] == "Income_Statement"
+        conversion_rate = np.where(is_pnl, harmonized["avg_rate"], harmonized["spot_rate"])
+        harmonized["fx_conversion_rate"] = conversion_rate
 
-        harmonized["fx_conversion_rate"] = effective_fx
-        harmonized["debit_usd"] = (harmonized["debit_amount"] * effective_fx).round(2)
-        harmonized["credit_usd"] = (harmonized["credit_amount"] * effective_fx).round(2)
-        harmonized["net_amount_usd"] = (harmonized["net_amount"] * effective_fx).round(2)
-
-        # Clean metadata
-        harmonized.drop(columns=["legacy_account_id", "from_currency"], inplace=True)
+        harmonized["amount_usd"] = (harmonized["amount_local_currency"] * harmonized["avg_rate"]).round(2)
+        harmonized["debit_usd"] = (harmonized["debit_amount"] * conversion_rate).round(2)
+        harmonized["credit_usd"] = (harmonized["credit_amount"] * conversion_rate).round(2)
+        harmonized["net_amount_usd"] = (harmonized["net_amount"] * conversion_rate).round(2)
         harmonized["_silver_harmonized_at"] = pd.Timestamp.now(tz="UTC").isoformat()
 
         return harmonized
