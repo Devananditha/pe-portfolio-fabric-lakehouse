@@ -527,6 +527,154 @@
       width: 100%;
       height: 380px;
     }
+
+    /* Portfolio Table Section */
+    .table-panel {
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-stone);
+      padding-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .table-title-area h2 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--text-pine);
+    }
+
+    .table-title-area p {
+      font-size: 0.875rem;
+      color: var(--text-stone);
+      margin-top: 0.2rem;
+    }
+
+    .table-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .select-editorial {
+      font-family: var(--font-sans);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-pine);
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-stone);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .select-editorial:focus {
+      border-color: var(--pine-primary);
+    }
+
+    .editorial-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .editorial-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    .editorial-table th {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-stone);
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border-stone-strong);
+      background-color: var(--bg-surface);
+      white-space: nowrap;
+    }
+
+    .editorial-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-stone);
+      color: var(--text-pine);
+      vertical-align: middle;
+    }
+
+    .editorial-table tr:hover td {
+      background-color: rgba(247, 245, 240, 0.6);
+    }
+
+    .entity-cell {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .entity-cell strong {
+      font-weight: 600;
+      color: var(--text-pine);
+    }
+
+    .entity-cell span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .badge-erp {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .badge-erp-sap { background: #EBF2EE; color: #234E3E; border: 1px solid #D4E3DB; }
+    .badge-erp-netsuite { background: #EFF5F1; color: #3D7058; border: 1px solid #D6E7DC; }
+    .badge-erp-d365 { background: #FCF6ED; color: #B87333; border: 1px solid #F2DEC2; }
+    .badge-erp-qbo { background: #F0EDE6; color: #5A524C; border: 1px solid #E0D9CE; }
+
+    .covenant-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: all 0.2s ease;
+    }
+
+    .covenant-pill.healthy {
+      background-color: var(--sage-light);
+      color: var(--sage-accent);
+      border: 1px solid rgba(61, 112, 88, 0.25);
+    }
+
+    .covenant-pill.breach {
+      background-color: var(--terracotta-bg);
+      color: var(--terracotta-alert);
+      border: 1px solid rgba(158, 42, 43, 0.35);
+      animation: alertPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(158, 42, 43, 0.2); }
+      50% { box-shadow: 0 0 0 5px rgba(158, 42, 43, 0); }
+    }
   </style>
 </head>
 <body>
@@ -715,6 +863,42 @@
         </div>
         <div class="chart-container">
           <canvas id="ebitdaTrajectoryChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Interactive PortCo Portfolio Performance & Covenant Table -->
+      <section class="editorial-card table-panel" id="table-panel">
+        <div class="table-header">
+          <div class="table-title-area">
+            <h2>Portfolio Company Operating Performance & Covenant Compliance</h2>
+            <p>Live multi-entity financial metrics, contractual senior debt parameters, and real-time DSCR headroom.</p>
+          </div>
+          <div class="table-controls">
+            <label for="select-period" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-stone);">Reporting Period:</label>
+            <select id="select-period" class="select-editorial" onchange="onPeriodChange()">
+              <!-- Dynamically populated periods -->
+            </select>
+          </div>
+        </div>
+
+        <div class="editorial-table-wrapper">
+          <table class="editorial-table" id="portfolio-table">
+            <thead>
+              <tr>
+                <th>Portfolio Company</th>
+                <th>ERP Source</th>
+                <th>TTM Revenue</th>
+                <th>EBITDA Margin</th>
+                <th>Debt Service (Mo)</th>
+                <th>DSCR (Coverage)</th>
+                <th>Min Covenant</th>
+                <th>Covenant Status</th>
+              </tr>
+            </thead>
+            <tbody id="portfolio-table-body">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
         </div>
       </section>
 
