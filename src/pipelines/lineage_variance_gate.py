@@ -137,6 +137,13 @@ class LineageVarianceGate:
         }
         return anom_df, summary
 
+    def export_variance_anomalies_csv(self, anomalies_df: pd.DataFrame) -> Path:
+        """Exports the variance drift audit anomalies log to data/03_gold/audit_variance_anomalies.csv."""
+        self.gold_dir.mkdir(parents=True, exist_ok=True)
+        out_path = self.gold_dir / "audit_variance_anomalies.csv"
+        anomalies_df.to_csv(out_path, index=False)
+        return out_path
+
     def evaluate_gate(self) -> Dict[str, Any]:
         """Runs comprehensive checks across Raw, Silver, and Gold layers."""
         # Execute / retrieve layers
