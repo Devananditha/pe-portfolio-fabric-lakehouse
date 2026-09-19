@@ -185,3 +185,102 @@ COUNTROWS(
     )
 )
 ```
+
+---
+
+## 5. What-If Scenario Parameter Modeling (DAX Calculations)
+
+Power BI What-If parameter tables allow executive partners to stress-test financial projections interactively via slicers.
+
+### Parameter Tables Setup (DAX Calculated Tables)
+
+```dax
+// Parameter 1: Synergy Cost Reduction (0% to 15%)
+Param_SynergyCostReduction = 
+GENERATESERIES(0.00, 0.15, 0.005)
+
+// Parameter 2: Debt Refinancing Spread Adjustment (-150 bps to +200 bps)
+Param_DebtSpreadBps = 
+GENERATESERIES(-150, 200, 10)
+
+// Parameter 3: Pricing Power Multiplier (0.95x to 1.15x)
+Param_PricingPower = 
+GENERATESERIES(0.95, 1.15, 0.01)
+```
+
+### Dynamic Scenario Measures
+
+```dax
+[Selected Synergy Reduction %] := 
+SELECTEDVALUE(Param_SynergyCostReduction[Value], 0.00)
+
+[Selected Debt Spread Bps] := 
+SELECTEDVALUE(Param_DebtSpreadBps[Value], 0)
+
+[Selected Pricing Power] := 
+SELECTEDVALUE(Param_PricingPower[Value], 1.00)
+
+// Adjusted Revenue under pricing power
+[Scenario Revenue USD] := 
+[Total Revenue USD] * [Selected Pricing Power]
+
+// Adjusted OPEX under synergy savings
+[Scenario OPEX USD] := 
+[Total OPEX USD] * (1 - [Selected Synergy Reduction %])
+
+// Adjusted Gross Profit (pricing flows through to bottom line)
+[Scenario Gross Profit USD] := 
+[Scenario Revenue USD] - [Total COGS USD]
+
+// Adjusted EBITDA
+[Scenario EBITDA USD] := 
+[Scenario Gross Profit USD] - [Scenario OPEX USD]
+
+// Adjusted Monthly Debt Service
+[Scenario Monthly Debt Service USD] := 
+VAR RateAdjustment = DIVIDE([Selected Debt Spread Bps], 10000, 0)
+RETURN
+    SUMX(
+        feat_portfolio_covenant_health,
+        feat_portfolio_covenant_health[monthly_amortization] + 
+        DIVIDE(feat_portfolio_covenant_health[principal_origination] * (feat_portfolio_covenant_health[annual_interest_rate] + RateAdjustment), 12, 0)
+    )
+
+// Dynamic Scenario DSCR
+[Scenario DSCR] := 
+VAR AdjEBITDA = [Scenario EBITDA USD]
+VAR AdjDebtService = [Scenario Monthly Debt Service USD]
+RETURN
+    IF(AdjDebtService > 0, DIVIDE(AdjEBITDA, AdjDebtService, 0), BLANK())
+
+// Scenario Covenant Status
+[Scenario Covenant Status] := 
+VAR ScenDSCR = [Scenario DSCR]
+VAR MinCov = [Min Statutory Covenant DSCR]
+RETURN
+    IF(ISBLANK(ScenDSCR), "NO_DATA", IF(ScenDSCR < MinCov, "BREACH_ALERT", "HEALTHY"))
+```
+
+---
+
+## 6. Microsoft Fabric DirectLake & Ingestion Workflow
+
+1. **DirectLake Mode over OneLake**:
+   - Point Power BI Desktop or Fabric Web Modeling to `abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>.Lakehouse/Tables/feat_portfolio_covenant_health`.
+   - DirectLake executes queries directly on Parquet/Delta storage using the Analysis Services engine without data duplication.
+
+2. **Power BI Pro / Premium Import Alternative**:
+   - Ingest `data/03_gold/powerbi_portfolio_value_creation.csv` or load the star schema Parquet files directly via Power Query M script:
+     ```powerquery
+     let
+         Source = Csv.Document(File.Contents("path/to/data/03_gold/powerbi_portfolio_value_creation.csv"), [Delimiter=",", Columns=23, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+         #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+         #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{
+             {"entity_code", type text}, {"entity_name", type text}, {"period_key", type text},
+             {"revenue", type number}, {"cogs", type number}, {"gross_profit", type number},
+             {"opex", type number}, {"ebitda", type number}, {"dscr", type number},
+             {"covenant_health_status", type text}, {"ttm_revenue", type number}, {"ttm_ebitda", type number}
+         })
+     in
+         #"Changed Type"
+     ```
