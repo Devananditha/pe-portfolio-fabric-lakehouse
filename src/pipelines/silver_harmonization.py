@@ -277,9 +277,39 @@ class SilverHarmonizationPipeline:
         harmonized_debt["principal_usd"] = (harmonized_debt["principal_origination"] * harmonized_debt["spot_rate"]).round(2)
         harmonized_debt["monthly_amortization_usd"] = (harmonized_debt["monthly_amortization"] * harmonized_debt["spot_rate"]).round(2)
         harmonized_debt.drop(columns=["from_currency"], inplace=True)
-        harmonized_debt["_silver_harmonized_at"] = pd.Timestamp.now(tz="UTC").isoformat()
+        harmonized_debt["_silver_harmonized_at"] = datetime.now(timezone.utc).isoformat()
 
         return harmonized_debt
+
+    def persist_silver_tables(self, harmonized_gl: pd.DataFrame, harmonized_debt: pd.DataFrame) -> None:
+        """Writes clean harmonized records to partitioned Parquet datasets and legacy tables."""
+        self.silver_dir.mkdir(parents=True, exist_ok=True)
+
+        # 1. Write partitioned Parquet dataset: data/02_silver/prm_harmonized_financial_ledger.parquet
+        prm_path = self.silver_dir / "prm_harmonized_financial_ledger.parquet"
+        logger.info(f"Persisting partitioned Parquet ledger to {prm_path}...")
+
+        # Clear existing partition directory to ensure strict idempotency
+        if prm_path.exists():
+            import shutil
+            shutil.rmtree(prm_path)
+
+        # Convert to PyArrow Table and write partitioned dataset
+        pa_table = pa.Table.from_pandas(harmonized_gl)
+        pq.write_to_dataset(
+            pa_table,
+            root_path=str(prm_path),
+            partition_cols=["entity_code"]
+        )
+        logger.info(f"Partitioned Parquet ledger written across {len(VALID_ENTITIES)} partitions.")
+
+        # 2. Write flat Parquet files for backward compatibility with Gold marts & test suites
+        flat_gl_path = self.silver_dir / "silver_general_ledger_harmonized.parquet"
+        debt_path = self.silver_dir / "silver_debt_covenants.parquet"
+
+        harmonized_gl.to_parquet(flat_gl_path, index=False)
+        harmonized_debt.to_parquet(debt_path, index=False)
+        logger.info(f"Persisted flat Parquet tables: {flat_gl_path.name}, {debt_path.name}")
 
     def run(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Executes full Silver harmonization and persists Parquet tables."""
