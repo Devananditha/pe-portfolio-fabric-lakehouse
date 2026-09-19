@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-19T23:11:40.326270+00:00",
+  "timestamp": "2026-09-19T23:22:29.918249+00:00",
   "status": "PASSED",
   "checks": {
     "record_count_lineage": {
@@ -32,6 +32,13 @@
       "dura_stress_breaches_detected": 4,
       "dura_non_stress_breaches": 0,
       "other_entities_breaches": 0,
+      "passed": true
+    },
+    "variance_drift_gate": {
+      "threshold_pct": 15.0,
+      "total_swings_flagged": 6,
+      "documented_swings": 6,
+      "unexpected_anomalies": 0,
       "passed": true
     }
   },

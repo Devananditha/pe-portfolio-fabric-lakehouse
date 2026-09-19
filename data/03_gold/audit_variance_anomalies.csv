@@ -1,0 +1,7 @@
+entity_code,period_key,period_index,metric,current_value,prior_value,pct_change,is_documented_event,event_description,severity
+DURA_US,2025-06,18,REVENUE,1997483.72,4009935.84,-50.19,True,DURA_US operational stress onset: supply chain disruption and customer contract renegotiation causing severe revenue and EBITDA compression.,DOCUMENTED_EVENT
+DURA_US,2025-06,18,EBITDA,151914.83,1332995.35,-88.6,True,DURA_US operational stress onset: supply chain disruption and customer contract renegotiation causing severe revenue and EBITDA compression.,DOCUMENTED_EVENT
+DURA_US,2025-07,19,EBITDA,177479.62,151914.83,16.83,True,DURA_US stress continuation: operational stabilization efforts.,DOCUMENTED_EVENT
+DURA_US,2025-08,20,EBITDA,150522.62,177479.62,-15.19,True,DURA_US stress continuation: margin compression under revised pricing.,DOCUMENTED_EVENT
+DURA_US,2025-10,22,REVENUE,3633477.32,2015916.07,80.24,True,DURA_US operational turnaround and contract rebound: revenue normalization and EBITDA surge back to baseline.,DOCUMENTED_EVENT
+DURA_US,2025-10,22,EBITDA,1121657.75,160596.47,598.43,True,DURA_US operational turnaround and contract rebound: revenue normalization and EBITDA surge back to baseline.,DOCUMENTED_EVENT
