@@ -283,89 +283,24 @@ class GoldDimensionalModelingPipeline:
         agg["canonical_account_code"] = agg[acc_col]
         return agg
 
-    def build_fact_covenant_health(
-        self,
-        fact_fin: pd.DataFrame,
-        dim_entity: pd.DataFrame,
-        dim_period: pd.DataFrame
-    ) -> pd.DataFrame:
-        """Calculates monthly EBITDA, Debt Service, and DSCR covenant compliance per entity."""
-        # Pivot income statement canonical accounts to compute EBITDA
-        # Revenue normal balance is credit: revenue_usd = credit_usd - debit_usd
-        # COGS, OPEX, D&A, Interest normal balance is debit: expense_usd = debit_usd - credit_usd
-        piv = fact_fin.pivot_table(
-            index=["entity_id", "period"],
-            columns="canonical_account_code",
-            values=["debit_usd", "credit_usd"],
-            aggfunc="sum",
-            fill_value=0.0
-        )
+    def export_powerbi_csv(self, covenant_df: pd.DataFrame) -> Path:
+        """Exports an executive flat mart for Power BI and web consumption."""
+        self.gold_dir.mkdir(parents=True, exist_ok=True)
+        out_csv = self.gold_dir / "powerbi_portfolio_value_creation.csv"
 
-        rows = []
-        for (entity_id, period), _ in piv.iterrows():
-            # Revenue (REV_CORE): Net Credit
-            rev = piv.loc[(entity_id, period), ("credit_usd", "REV_CORE")] - piv.loc[(entity_id, period), ("debit_usd", "REV_CORE")]
-            # COGS (COGS_DIRECT): Net Debit
-            cogs = piv.loc[(entity_id, period), ("debit_usd", "COGS_DIRECT")] - piv.loc[(entity_id, period), ("credit_usd", "COGS_DIRECT")]
-            # OPEX (OPEX_SGA): Net Debit
-            opex = piv.loc[(entity_id, period), ("debit_usd", "OPEX_SGA")] - piv.loc[(entity_id, period), ("credit_usd", "OPEX_SGA")]
-            # DA (DA_DEPR): Net Debit
-            da = piv.loc[(entity_id, period), ("debit_usd", "DA_DEPR")] - piv.loc[(entity_id, period), ("credit_usd", "DA_DEPR")]
-            # Interest (FIN_INT_EXP): Net Debit
-            interest = piv.loc[(entity_id, period), ("debit_usd", "FIN_INT_EXP")] - piv.loc[(entity_id, period), ("credit_usd", "FIN_INT_EXP")]
-
-            gross_profit = rev - cogs
-            ebitda = rev - cogs - opex
-            ebit = ebitda - da
-
-            rows.append({
-                "entity_id": entity_id,
-                "period": period,
-                "revenue_usd": round(rev, 2),
-                "cogs_usd": round(cogs, 2),
-                "gross_profit_usd": round(gross_profit, 2),
-                "opex_usd": round(opex, 2),
-                "ebitda_usd": round(ebitda, 2),
-                "da_usd": round(da, 2),
-                "ebit_usd": round(ebit, 2),
-                "interest_usd": round(interest, 2),
-            })
-
-        metrics_df = pd.DataFrame(rows)
-
-        # Merge entity metadata for debt covenants and amortization
-        merged = metrics_df.merge(
-            dim_entity[[
-                "entity_id", "entity_name", "facility_name", "monthly_amortization_usd", "covenant_min_dscr"
-            ]],
-            on="entity_id",
-            how="left"
-        )
-
-        merged = merged.merge(
-            dim_period[["period_id", "period_index", "year_month_display"]],
-            left_on="period",
-            right_on="period_id",
-            how="left"
-        ).drop(columns=["period_id"])
-
-        # Compute Total Debt Service & DSCR
-        merged["debt_service_usd"] = (merged["interest_usd"] + merged["monthly_amortization_usd"]).round(2)
-        merged["dscr"] = (merged["ebitda_usd"] / merged["debt_service_usd"]).round(3)
-        merged["dscr_headroom"] = (merged["dscr"] - merged["covenant_min_dscr"]).round(3)
-
-        # Covenant status
-        def classify_covenant(row):
-            if row["dscr"] < row["covenant_min_dscr"]:
-                return "BREACH"
-            elif row["dscr_headroom"] < 0.15:
-                return "WARNING"
-            return "COMPLIANT"
-
-        merged["covenant_status"] = merged.apply(classify_covenant, axis=1)
-        merged["is_breach"] = (merged["covenant_status"] == "BREACH").astype(int)
-
-        return merged.sort_values(["entity_id", "period"]).reset_index(drop=True)
+        export_cols = [
+            "entity_code", "entity_name", "facility_name", "period_key",
+            "revenue", "cogs", "gross_profit", "gross_margin_pct",
+            "opex", "ebitda", "ebit", "ebitda_margin_pct",
+            "da", "interest_expense", "monthly_debt_service",
+            "dscr", "covenant_min_dscr", "dscr_headroom",
+            "covenant_health_status", "rolling_3m_ebitda",
+            "ttm_revenue", "ttm_ebitda", "pop_revenue_growth_pct"
+        ]
+        available = [c for c in export_cols if c in covenant_df.columns]
+        covenant_df[available].to_csv(out_csv, index=False)
+        logger.info(f"Exported Power BI executive flat mart: {out_csv} ({len(covenant_df)} records)")
+        return out_csv
 
     def run(self) -> Dict[str, pd.DataFrame]:
         """Executes full Gold dimensional modeling and persists Parquet datasets."""
@@ -397,6 +332,13 @@ class GoldDimensionalModelingPipeline:
             out_parquet = self.gold_dir / f"{name}.parquet"
             df.to_parquet(out_parquet, index=False)
             logger.info(f"Persisted Gold Mart: {out_parquet.name} ({len(df)} records)")
+
+        # Export Power BI Flat Mart
+        self.export_powerbi_csv(covenant_health_df)
+
+        logger.info("=" * 70)
+        logger.info(f"Gold Dimensional Modeling Succeeded: {len(covenant_health_df):,} covenant health rows.")
+        logger.info("=" * 70)
 
         return models
 
