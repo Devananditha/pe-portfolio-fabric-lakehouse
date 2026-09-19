@@ -9710,7 +9710,7 @@ window.PORTFOLIO_DATA = {
     }
   ],
   "gate_report": {
-    "timestamp": "2026-09-19T23:11:27.038164+00:00",
+    "timestamp": "2026-09-19T23:22:29.918249+00:00",
     "status": "PASSED",
     "checks": {
       "record_count_lineage": {
@@ -9744,8 +9744,89 @@ window.PORTFOLIO_DATA = {
         "dura_non_stress_breaches": 0,
         "other_entities_breaches": 0,
         "passed": true
+      },
+      "variance_drift_gate": {
+        "threshold_pct": 15.0,
+        "total_swings_flagged": 6,
+        "documented_swings": 6,
+        "unexpected_anomalies": 0,
+        "passed": true
       }
     },
     "metrics": {}
-  }
+  },
+  "audit_variance_anomalies": [
+    {
+      "entity_code": "DURA_US",
+      "period_key": "2025-06",
+      "period_index": 18,
+      "metric": "REVENUE",
+      "current_value": 1997483.72,
+      "prior_value": 4009935.84,
+      "pct_change": -50.19,
+      "is_documented_event": true,
+      "event_description": "DURA_US operational stress onset: supply chain disruption and customer contract renegotiation causing severe revenue and EBITDA compression.",
+      "severity": "DOCUMENTED_EVENT"
+    },
+    {
+      "entity_code": "DURA_US",
+      "period_key": "2025-06",
+      "period_index": 18,
+      "metric": "EBITDA",
+      "current_value": 151914.83,
+      "prior_value": 1332995.35,
+      "pct_change": -88.6,
+      "is_documented_event": true,
+      "event_description": "DURA_US operational stress onset: supply chain disruption and customer contract renegotiation causing severe revenue and EBITDA compression.",
+      "severity": "DOCUMENTED_EVENT"
+    },
+    {
+      "entity_code": "DURA_US",
+      "period_key": "2025-07",
+      "period_index": 19,
+      "metric": "EBITDA",
+      "current_value": 177479.62,
+      "prior_value": 151914.83,
+      "pct_change": 16.83,
+      "is_documented_event": true,
+      "event_description": "DURA_US stress continuation: operational stabilization efforts.",
+      "severity": "DOCUMENTED_EVENT"
+    },
+    {
+      "entity_code": "DURA_US",
+      "period_key": "2025-08",
+      "period_index": 20,
+      "metric": "EBITDA",
+      "current_value": 150522.62,
+      "prior_value": 177479.62,
+      "pct_change": -15.19,
+      "is_documented_event": true,
+      "event_description": "DURA_US stress continuation: margin compression under revised pricing.",
+      "severity": "DOCUMENTED_EVENT"
+    },
+    {
+      "entity_code": "DURA_US",
+      "period_key": "2025-10",
+      "period_index": 22,
+      "metric": "REVENUE",
+      "current_value": 3633477.32,
+      "prior_value": 2015916.07,
+      "pct_change": 80.24,
+      "is_documented_event": true,
+      "event_description": "DURA_US operational turnaround and contract rebound: revenue normalization and EBITDA surge back to baseline.",
+      "severity": "DOCUMENTED_EVENT"
+    },
+    {
+      "entity_code": "DURA_US",
+      "period_key": "2025-10",
+      "period_index": 22,
+      "metric": "EBITDA",
+      "current_value": 1121657.75,
+      "prior_value": 160596.47,
+      "pct_change": 598.43,
+      "is_documented_event": true,
+      "event_description": "DURA_US operational turnaround and contract rebound: revenue normalization and EBITDA surge back to baseline.",
+      "severity": "DOCUMENTED_EVENT"
+    }
+  ]
 };

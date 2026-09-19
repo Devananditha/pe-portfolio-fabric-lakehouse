@@ -64,6 +64,33 @@ pe-portfolio-fabric-lakehouse/
 
 ---
 
+## 🛡️ DataOps Governance, Variance Drift Gate & CI/CD Suite
+
+### 1. Automated Variance Drift Gate (`src/pipelines/lineage_variance_gate.py`)
+The DataOps quality gate automatically monitors period-over-period (PoP) financial metric swings across the entire portfolio:
+- **$\pm 15\%$ Drift Detection**: Scans consecutive periods for every entity in the Gold mart (`feat_portfolio_covenant_health.parquet`) and flags any Revenue or EBITDA fluctuation exceeding $\pm 15\%$.
+- **Operational Event Catalog**: Known business transitions (such as the `DURA_US` M18 supply-chain shock and M22 turnaround rebound) are cross-referenced against documented operational events to differentiate genuine operational anomalies from unverified data drifts.
+- **Audit Artifact Generation**: Flagged swings and classifications are persisted directly to `data/03_gold/audit_variance_anomalies.csv` and reported in `reports/lineage_variance_gate_report.json`.
+
+### 2. Financial Invariants PyTest Suite (`tests/test_financial_invariants.py`)
+Automated test suite asserting institutional financial truths across 29 test scenarios:
+- **Double-Entry Balance Invariant**: Asserts Gross Profit $\le$ Revenue across all 96 portfolio entity-months.
+- **EBITDA Invariant**: Asserts $\text{EBITDA} = \text{Revenue} - \text{COGS} - \text{OPEX}$ to machine precision ($10^{-4}$).
+- **Covenant Non-Null Invariant**: Guarantees zero missing values for DSCR, minimum covenant thresholds, and health status indicators.
+- **100% Cryptographic Lineage**: Validates that every Silver record retains an immutable MD5 lineage hash and preserves the originating ERP system.
+- **Stress Shock Detection**: Asserts that `DURA_US` triggers an explicit `BREACH_ALERT` during scheduled stress periods (M18–M21) with zero false-positive breaches across normal operating entities.
+
+### 3. Continuous Integration Workflow (`.github/workflows/dataops-ci.yml`)
+- **Automated Triggers**: Runs on every push and pull request targeting `main`.
+- **Runtime Environment**: Python 3.11 with cached pip dependencies.
+- **Governance Steps**:
+  1. Multi-ERP synthetic portfolio generator (`scripts/generate_portfolio_data.py`).
+  2. Strict PyTest financial governance execution (`pytest tests/ -v`).
+  3. Full Medallion lakehouse pipeline orchestration (`python run_pipeline.py --all`).
+  4. Lakehouse Parquet and audit artifact existence and integrity assertions.
+
+---
+
 ## 🚀 Quickstart & CLI Orchestration
 
 ### 1. Install Dependencies

@@ -26,6 +26,11 @@ def export():
         with open(gate_report_path, "r", encoding="utf-8") as f:
             gate_report = json.load(f)
 
+    anomalies_path = GOLD_DIR / "audit_variance_anomalies.csv"
+    audit_variance_anomalies = []
+    if anomalies_path.exists():
+        audit_variance_anomalies = pd.read_csv(anomalies_path).to_dict(orient="records")
+
     data = {
         "dim_entity": dim_entity,
         "dim_period": dim_period,
@@ -34,6 +39,7 @@ def export():
         "feat_covenant": feat_covenant,
         "coa_crosswalk": coa_crosswalk,
         "gate_report": gate_report,
+        "audit_variance_anomalies": audit_variance_anomalies,
     }
 
     WEB_DIR.mkdir(parents=True, exist_ok=True)
