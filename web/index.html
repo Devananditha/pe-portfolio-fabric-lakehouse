@@ -491,6 +491,42 @@
       color: var(--pine-primary);
       border-color: rgba(35, 78, 62, 0.3);
     }
+
+    /* Chart Section */
+    .chart-panel {
+      padding: 1.75rem 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-stone);
+      padding-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .chart-title-area h2 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--text-pine);
+    }
+
+    .chart-title-area p {
+      font-size: 0.875rem;
+      color: var(--text-stone);
+      margin-top: 0.2rem;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 380px;
+    }
   </style>
 </head>
 <body>
@@ -664,6 +700,24 @@
         </div>
       </section>
 
+      <!-- Chart.js Monthly EBITDA Trajectory by PortCo -->
+      <section class="editorial-card chart-panel" id="chart-panel">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h2>Monthly EBITDA Trajectory by Portfolio Company</h2>
+            <p>Historical and simulated EBITDA trends across DuraCorp, CloudMed, LogiTrans, and Apex (M01 – M24).</p>
+          </div>
+          <div class="chart-legend-actions">
+            <span class="ticker-pill" style="color: var(--pine-primary); background: var(--pine-light); border-color: rgba(35, 78, 62, 0.3);">
+              Live What-If Overlay Active
+            </span>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="ebitdaTrajectoryChart"></canvas>
+        </div>
+      </section>
+
       <!-- Additional content sections -->
     </main>
   </div>
@@ -817,12 +871,115 @@
       recalculateSimulation();
     }
 
+    let ebitdaChartInstance = null;
+
+    const ENTITY_CONFIGS = {
+      'DURA_US': { name: 'DuraCorp (SAP S/4HANA)', borderColor: '#234E3E', pointColor: '#234E3E' },
+      'MED_UK': { name: 'CloudMed (NetSuite)', borderColor: '#3D7058', pointColor: '#3D7058' },
+      'LOGI_EU': { name: 'LogiTrans (Dynamics 365)', borderColor: '#B87333', pointColor: '#B87333' },
+      'RETAIL_US': { name: 'Apex Omnichannel (QuickBooks)', borderColor: '#6B665E', pointColor: '#6B665E' }
+    };
+
+    function initEbitdaChart() {
+      const canvas = document.getElementById('ebitdaTrajectoryChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const feat = window.PORTFOLIO_DATA.feat_covenant;
+      const periods = [...new Set(feat.map(r => r.period_key))].sort();
+
+      const datasets = Object.keys(ENTITY_CONFIGS).map(code => {
+        const conf = ENTITY_CONFIGS[code];
+        const entityRows = feat.filter(r => r.entity_code === code).sort((a, b) => a.period_key.localeCompare(b.period_key));
+        return {
+          label: conf.name,
+          entityCode: code,
+          data: entityRows.map(r => Number(r.ebitda)),
+          borderColor: conf.borderColor,
+          backgroundColor: 'transparent',
+          borderWidth: 2.2,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: conf.pointColor,
+          tension: 0.25
+        };
+      });
+
+      ebitdaChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: periods,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                boxWidth: 12,
+                usePointStyle: true,
+                pointStyle: 'circle',
+                font: {
+                  family: "'Plus Jakarta Sans', sans-serif",
+                  size: 12,
+                  weight: '600'
+                },
+                color: '#1B2E26',
+                padding: 16
+              }
+            },
+            tooltip: {
+              backgroundColor: '#1B2E26',
+              titleColor: '#FFFFFF',
+              bodyColor: '#E5E0D8',
+              borderColor: '#6B665E',
+              borderWidth: 1,
+              padding: 12,
+              titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+              bodyFont: { family: "'JetBrains Mono', monospace", size: 12 },
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(229, 224, 216, 0.6)' },
+              ticks: {
+                color: '#6B665E',
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 },
+                maxRotation: 45
+              }
+            },
+            y: {
+              grid: { color: 'rgba(229, 224, 216, 0.6)' },
+              ticks: {
+                color: '#6B665E',
+                font: { family: "'JetBrains Mono', monospace", size: 11 },
+                callback: function(val) {
+                  return '$' + (val / 1000000).toFixed(1) + 'M';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       // Wire input listeners for sliders
       document.getElementById('slider-synergy').addEventListener('input', recalculateSimulation);
       document.getElementById('slider-spread').addEventListener('input', recalculateSimulation);
       document.getElementById('slider-pricing').addEventListener('input', recalculateSimulation);
 
+      initEbitdaChart();
       recalculateSimulation();
     });
   </script>
