@@ -56,6 +56,62 @@ class LineageVarianceGate:
         self.gold_dir = gold_dir or GOLD_DIR
         self.gold_pipeline = gold_pipeline or GoldDimensionalModelingPipeline()
 
+    def detect_variance_drift(
+        self,
+        covenant_health_df: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+        """Scans consecutive periods per entity for Revenue/EBITDA variance swings exceeding threshold."""
+        ent_col = "entity_code" if "entity_code" in covenant_health_df.columns else "entity_id"
+        period_col = "period_key" if "period_key" in covenant_health_df.columns else "period"
+        
+        anomalies = []
+        for ent in sorted(covenant_health_df[ent_col].unique()):
+            ent_df = covenant_health_df[covenant_health_df[ent_col] == ent].sort_values(period_col).reset_index(drop=True)
+            for idx in range(1, len(ent_df)):
+                p_prev = ent_df.loc[idx - 1]
+                p_curr = ent_df.loc[idx]
+                p_key = str(p_curr[period_col])
+                p_idx = int(p_curr["period_index"]) if "period_index" in p_curr else idx + 1
+
+                # 1. Revenue PoP swing calculation
+                rev_prev = float(p_prev["revenue_usd" if "revenue_usd" in p_prev else "revenue"])
+                rev_curr = float(p_curr["revenue_usd" if "revenue_usd" in p_curr else "revenue"])
+                rev_pct = (rev_curr - rev_prev) / rev_prev if rev_prev != 0 else 0.0
+
+                if abs(rev_pct) > VARIANCE_THRESHOLD:
+                    anomalies.append({
+                        "entity_code": ent,
+                        "period_key": p_key,
+                        "period_index": p_idx,
+                        "metric": "REVENUE",
+                        "current_value": round(rev_curr, 2),
+                        "prior_value": round(rev_prev, 2),
+                        "pct_change": round(rev_pct * 100.0, 2),
+                    })
+
+                # 2. EBITDA PoP swing calculation
+                eb_prev = float(p_prev["ebitda_usd" if "ebitda_usd" in p_prev else "ebitda"])
+                eb_curr = float(p_curr["ebitda_usd" if "ebitda_usd" in p_curr else "ebitda"])
+                eb_pct = (eb_curr - eb_prev) / eb_prev if eb_prev != 0 else 0.0
+
+                if abs(eb_pct) > VARIANCE_THRESHOLD:
+                    anomalies.append({
+                        "entity_code": ent,
+                        "period_key": p_key,
+                        "period_index": p_idx,
+                        "metric": "EBITDA",
+                        "current_value": round(eb_curr, 2),
+                        "prior_value": round(eb_prev, 2),
+                        "pct_change": round(eb_pct * 100.0, 2),
+                    })
+
+        anom_df = pd.DataFrame(anomalies)
+        summary = {
+            "threshold_pct": VARIANCE_THRESHOLD * 100.0,
+            "total_swings_flagged": len(anom_df),
+        }
+        return anom_df, summary
+
     def evaluate_gate(self) -> Dict[str, Any]:
         """Runs comprehensive checks across Raw, Silver, and Gold layers."""
         # Execute / retrieve layers
