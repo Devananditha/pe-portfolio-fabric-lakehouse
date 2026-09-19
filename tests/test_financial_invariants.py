@@ -94,6 +94,13 @@ class TestFinancialInvariants:
                 f"expected {expected_ebitda}, got {ebitda}"
             )
 
+    def test_covenant_metrics_non_null(self, gold_covenant_health: pd.DataFrame):
+        """Ensures no null values exist in dscr, covenant_min_dscr, or covenant_health_status."""
+        critical_cols = ["dscr", "covenant_min_dscr", "covenant_health_status", "monthly_debt_service"]
+        for col in critical_cols:
+            null_count = int(gold_covenant_health[col].isna().sum())
+            assert null_count == 0, f"Found {null_count} nulls in critical column: {col}"
+
     def test_raw_gl_aggregate_double_entry(self, raw_gl: pd.DataFrame):
         """Total Debits must exactly equal Total Credits across the entire General Ledger."""
         debits = round(raw_gl["debit_amount"].astype(float).sum(), 2)
