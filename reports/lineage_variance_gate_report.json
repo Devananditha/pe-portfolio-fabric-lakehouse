@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-09-19T22:42:45.509698+00:00",
+  "status": "PASSED",
+  "checks": {
+    "record_count_lineage": {
+      "raw_gl_count": 1440,
+      "silver_gl_count": 1440,
+      "variance": 0,
+      "passed": true
+    },
+    "raw_double_entry_balanced": {
+      "total_debits": 730567050.75,
+      "total_credits": 730567050.75,
+      "net_difference": 0.0,
+      "passed": true
+    },
+    "silver_double_entry_balanced": {
+      "total_debits": 730567050.75,
+      "total_credits": 730567050.75,
+      "net_difference": 0.0,
+      "passed": true
+    },
+    "entity_period_matrix": {
+      "expected_entities": 4,
+      "expected_periods": 24,
+      "expected_cells": 96,
+      "actual_cells": 96,
+      "passed": true
+    },
+    "stress_shock_validation": {
+      "dura_stress_months_evaluated": 4,
+      "dura_stress_breaches_detected": 4,
+      "dura_non_stress_breaches": 0,
+      "other_entities_breaches": 0,
+      "passed": true
+    }
+  },
+  "metrics": {}
+}
