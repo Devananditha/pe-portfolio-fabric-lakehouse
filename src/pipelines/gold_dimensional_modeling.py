@@ -125,7 +125,18 @@ class GoldDimensionalModelingPipeline:
                     PARTITION BY p.entity_code 
                     ORDER BY p.period_key 
                     ROWS BETWEEN 11 PRECEDING AND CURRENT ROW
-                ), 2) AS ttm_ebitda
+                ), 2) AS ttm_ebitda,
+                -- Period-over-Period (PoP) Revenue Growth via LAG
+                ROUND(LAG(p.revenue, 1) OVER (
+                    PARTITION BY p.entity_code 
+                    ORDER BY p.period_key
+                ), 2) AS lag_revenue,
+                ROUND(CASE 
+                    WHEN LAG(p.revenue, 1) OVER (PARTITION BY p.entity_code ORDER BY p.period_key) > 0 
+                    THEN ((p.revenue - LAG(p.revenue, 1) OVER (PARTITION BY p.entity_code ORDER BY p.period_key)) / 
+                          LAG(p.revenue, 1) OVER (PARTITION BY p.entity_code ORDER BY p.period_key)) * 100.0 
+                    ELSE 0.0 
+                END, 2) AS pop_revenue_growth_pct
             FROM pnl_metrics p
         )
         SELECT * FROM windowed_metrics ORDER BY entity_code, period_key;
