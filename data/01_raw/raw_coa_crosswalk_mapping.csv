@@ -1,41 +1,41 @@
-source_system,legacy_account_id,legacy_account_name,canonical_account_code,account_category,financial_statement,normal_balance
-SAP,GL_REV_400010,Gross Revenue Industrial Sales,REV_CORE,Revenue,Income_Statement,Credit
-SAP,GL_COGS_500010,Direct Manufacturing Material & Labor,COGS_DIRECT,COGS,Income_Statement,Debit
-SAP,GL_OPEX_600010,SG&A Operating Overhead & Payroll,OPEX_SGA,Operating_Expense,Income_Statement,Debit
-SAP,GL_DA_700010,Plant & Machinery Depreciation,DA_DEPR,Depreciation_Amortization,Income_Statement,Debit
-SAP,GL_INT_800010,Senior Facility Interest Expense,FIN_INT_EXP,Interest_Expense,Income_Statement,Debit
-SAP,GL_CASH_100010,JPMorgan Treasury Operating Checking,CASH_EQUIV,Cash,Balance_Sheet,Debit
-SAP,GL_AR_110010,Trade Accounts Receivable Commercial,AR_TRADE,Current_Asset,Balance_Sheet,Debit
-SAP,GL_AP_200010,Trade Accounts Payable Vendors,AP_TRADE,Current_Liability,Balance_Sheet,Credit
-SAP,GL_DEBT_250010,Senior Secured Term Loan Principal,DEBT_SENIOR,Long_Term_Debt,Balance_Sheet,Credit
-SAP,GL_EQ_300010,Retained Earnings & Contributed Surplus,EQUITY_RETAINED,Equity,Balance_Sheet,Credit
-NetSuite,REV-SUB-ARR,SaaS Subscription ARR Recurring Revenue,REV_CORE,Revenue,Income_Statement,Credit
-NetSuite,COGS-HOST-AWS,AWS Hosting & Direct Infrastructure,COGS_DIRECT,COGS,Income_Statement,Debit
-NetSuite,OPEX-SALES-MKTG,"Sales, Marketing, R&D and Admin",OPEX_SGA,Operating_Expense,Income_Statement,Debit
-NetSuite,DA-SERVER-AMORT,Capitalized Software Amortization,DA_DEPR,Depreciation_Amortization,Income_Statement,Debit
-NetSuite,FIN-TERM-INT,Growth Debt Monthly Interest Charge,FIN_INT_EXP,Interest_Expense,Income_Statement,Debit
-NetSuite,CASH-BARCLAYS-GBP,Barclays Commercial Operating Account,CASH_EQUIV,Cash,Balance_Sheet,Debit
-NetSuite,AR-CUSTOMERS,B2B Subscription Receivables Control,AR_TRADE,Current_Asset,Balance_Sheet,Debit
-NetSuite,AP-VENDORS,Trade Accounts Payable Vendor Ledger,AP_TRADE,Current_Liability,Balance_Sheet,Credit
-NetSuite,DEBT-SENIOR-FAC,Syndicated Senior Debt Tranche,DEBT_SENIOR,Long_Term_Debt,Balance_Sheet,Credit
-NetSuite,EQ-COMMON-CAP,Common Equity & Retained Earnings,EQUITY_RETAINED,Equity,Balance_Sheet,Credit
-Dynamics365,4400_ERLOESE,Erlöse aus Logistikdienstleistungen,REV_CORE,Revenue,Income_Statement,Credit
-Dynamics365,5400_WARENEINSATZ,Aufwendungen für Frachten & Treibstoff,COGS_DIRECT,COGS,Income_Statement,Debit
-Dynamics365,6200_PERSONALAUFWAND,Personalaufwand und allgemeine Verwaltung,OPEX_SGA,Operating_Expense,Income_Statement,Debit
-Dynamics365,6500_ABSCHREIBUNGEN,Abschreibungen auf Fuhrpark und Logistik,DA_DEPR,Depreciation_Amortization,Income_Statement,Debit
-Dynamics365,7300_ZINSAUFWAND,Zinsaufwendungen für Darlehen,FIN_INT_EXP,Interest_Expense,Income_Statement,Debit
-Dynamics365,1200_BANK_EUR,Deutsche Bank Geschäftsguthaben,CASH_EQUIV,Cash,Balance_Sheet,Debit
-Dynamics365,1400_FORDERUNGEN,Forderungen aus Lieferungen und Leistungen,AR_TRADE,Current_Asset,Balance_Sheet,Debit
-Dynamics365,3300_VERBINDLICHKEITEN,Verbindlichkeiten aus Lieferungen,AP_TRADE,Current_Liability,Balance_Sheet,Credit
-Dynamics365,0630_ANLEIHEN,Langfristige Bankverbindlichkeiten,DEBT_SENIOR,Long_Term_Debt,Balance_Sheet,Credit
-Dynamics365,2000_EIGENKAPITAL,Gezeichnetes Kapital und Rücklagen,EQUITY_RETAINED,Equity,Balance_Sheet,Credit
-QuickBooks,401_Merch_Sales,Omnichannel Merchandise Sales,REV_CORE,Revenue,Income_Statement,Credit
-QuickBooks,501_Cost_Goods_Sold,Cost of Goods Sold & Direct Freight,COGS_DIRECT,COGS,Income_Statement,Debit
-QuickBooks,601_Payroll_SG&A,"Store Payroll, Marketing, & Rent",OPEX_SGA,Operating_Expense,Income_Statement,Debit
-QuickBooks,680_Depreciation,Depreciation on Store Fixtures,DA_DEPR,Depreciation_Amortization,Income_Statement,Debit
-QuickBooks,701_Interest_Expense,Revolver & Term Interest Expense,FIN_INT_EXP,Interest_Expense,Income_Statement,Debit
-QuickBooks,101_Operating_Checking,Chase Commercial Operating Account,CASH_EQUIV,Cash,Balance_Sheet,Debit
-QuickBooks,120_Accounts_Receivable,Trade Accounts Receivable Control,AR_TRADE,Current_Asset,Balance_Sheet,Debit
-QuickBooks,201_Accounts_Payable,Vendor Accounts Payable Control,AP_TRADE,Current_Liability,Balance_Sheet,Credit
-QuickBooks,270_Note_Payable,Asset-Based Term Loan Principal,DEBT_SENIOR,Long_Term_Debt,Balance_Sheet,Credit
-QuickBooks,301_Owners_Equity,Shareholder Equity & Retained Earnings,EQUITY_RETAINED,Equity,Balance_Sheet,Credit
+source_system,entity_code,raw_account_code,legacy_account_id,legacy_account_name,canonical_code,canonical_account_code,account_category,financial_statement_line,financial_statement,normal_balance
+SAP,DURA_US,GL_REV_400010,GL_REV_400010,Gross Revenue Industrial Sales,REV_CORE,REV_CORE,Revenue,REVENUE,Income_Statement,Credit
+SAP,DURA_US,GL_COGS_500010,GL_COGS_500010,Direct Manufacturing Material & Labor,COGS_DIRECT,COGS_DIRECT,COGS,COGS,Income_Statement,Debit
+SAP,DURA_US,GL_OPEX_600010,GL_OPEX_600010,SG&A Operating Overhead & Payroll,OPEX_SGA,OPEX_SGA,Operating_Expense,OPEX,Income_Statement,Debit
+SAP,DURA_US,GL_DA_700010,GL_DA_700010,Plant & Machinery Depreciation,DA_DEPR,DA_DEPR,Depreciation_Amortization,DEPRECIATION,Income_Statement,Debit
+SAP,DURA_US,GL_INT_800010,GL_INT_800010,Senior Facility Interest Expense,FIN_INT_EXP,FIN_INT_EXP,Interest_Expense,INTEREST_EXPENSE,Income_Statement,Debit
+SAP,DURA_US,GL_CASH_100010,GL_CASH_100010,JPMorgan Treasury Operating Checking,CASH_EQUIV,CASH_EQUIV,Cash,CASH,Balance_Sheet,Debit
+SAP,DURA_US,GL_AR_110010,GL_AR_110010,Trade Accounts Receivable Commercial,AR_TRADE,AR_TRADE,Current_Asset,ACCOUNTS_RECEIVABLE,Balance_Sheet,Debit
+SAP,DURA_US,GL_AP_200010,GL_AP_200010,Trade Accounts Payable Vendors,AP_TRADE,AP_TRADE,Current_Liability,ACCOUNTS_PAYABLE,Balance_Sheet,Credit
+SAP,DURA_US,GL_DEBT_250010,GL_DEBT_250010,Senior Secured Term Loan Principal,DEBT_SENIOR,DEBT_SENIOR,Long_Term_Debt,SENIOR_DEBT,Balance_Sheet,Credit
+SAP,DURA_US,GL_EQ_300010,GL_EQ_300010,Retained Earnings & Contributed Surplus,EQUITY_RETAINED,EQUITY_RETAINED,Equity,RETAINED_EQUITY,Balance_Sheet,Credit
+NetSuite,MED_UK,REV-SUB-ARR,REV-SUB-ARR,SaaS Subscription ARR Recurring Revenue,REV_CORE,REV_CORE,Revenue,REVENUE,Income_Statement,Credit
+NetSuite,MED_UK,COGS-HOST-AWS,COGS-HOST-AWS,AWS Hosting & Direct Infrastructure,COGS_DIRECT,COGS_DIRECT,COGS,COGS,Income_Statement,Debit
+NetSuite,MED_UK,OPEX-SALES-MKTG,OPEX-SALES-MKTG,"Sales, Marketing, R&D and Admin",OPEX_SGA,OPEX_SGA,Operating_Expense,OPEX,Income_Statement,Debit
+NetSuite,MED_UK,DA-SERVER-AMORT,DA-SERVER-AMORT,Capitalized Software Amortization,DA_DEPR,DA_DEPR,Depreciation_Amortization,AMORTIZATION,Income_Statement,Debit
+NetSuite,MED_UK,FIN-TERM-INT,FIN-TERM-INT,Growth Debt Monthly Interest Charge,FIN_INT_EXP,FIN_INT_EXP,Interest_Expense,INTEREST_EXPENSE,Income_Statement,Debit
+NetSuite,MED_UK,CASH-BARCLAYS-GBP,CASH-BARCLAYS-GBP,Barclays Commercial Operating Account,CASH_EQUIV,CASH_EQUIV,Cash,CASH,Balance_Sheet,Debit
+NetSuite,MED_UK,AR-CUSTOMERS,AR-CUSTOMERS,B2B Subscription Receivables Control,AR_TRADE,AR_TRADE,Current_Asset,ACCOUNTS_RECEIVABLE,Balance_Sheet,Debit
+NetSuite,MED_UK,AP-VENDORS,AP-VENDORS,Trade Accounts Payable Vendor Ledger,AP_TRADE,AP_TRADE,Current_Liability,ACCOUNTS_PAYABLE,Balance_Sheet,Credit
+NetSuite,MED_UK,DEBT-SENIOR-FAC,DEBT-SENIOR-FAC,Syndicated Senior Debt Tranche,DEBT_SENIOR,DEBT_SENIOR,Long_Term_Debt,SENIOR_DEBT,Balance_Sheet,Credit
+NetSuite,MED_UK,EQ-COMMON-CAP,EQ-COMMON-CAP,Common Equity & Retained Earnings,EQUITY_RETAINED,EQUITY_RETAINED,Equity,RETAINED_EQUITY,Balance_Sheet,Credit
+Dynamics365,LOGI_EU,4400_ERLOESE,4400_ERLOESE,Erlöse aus Logistikdienstleistungen,REV_CORE,REV_CORE,Revenue,REVENUE,Income_Statement,Credit
+Dynamics365,LOGI_EU,5400_WARENEINSATZ,5400_WARENEINSATZ,Aufwendungen für Frachten & Treibstoff,COGS_DIRECT,COGS_DIRECT,COGS,COGS,Income_Statement,Debit
+Dynamics365,LOGI_EU,6200_PERSONALAUFWAND,6200_PERSONALAUFWAND,Personalaufwand und allgemeine Verwaltung,OPEX_SGA,OPEX_SGA,Operating_Expense,OPEX,Income_Statement,Debit
+Dynamics365,LOGI_EU,6500_ABSCHREIBUNGEN,6500_ABSCHREIBUNGEN,Abschreibungen auf Fuhrpark und Logistik,DA_DEPR,DA_DEPR,Depreciation_Amortization,DEPRECIATION,Income_Statement,Debit
+Dynamics365,LOGI_EU,7300_ZINSAUFWAND,7300_ZINSAUFWAND,Zinsaufwendungen für Darlehen,FIN_INT_EXP,FIN_INT_EXP,Interest_Expense,INTEREST_EXPENSE,Income_Statement,Debit
+Dynamics365,LOGI_EU,1200_BANK_EUR,1200_BANK_EUR,Deutsche Bank Geschäftsguthaben,CASH_EQUIV,CASH_EQUIV,Cash,CASH,Balance_Sheet,Debit
+Dynamics365,LOGI_EU,1400_FORDERUNGEN,1400_FORDERUNGEN,Forderungen aus Lieferungen und Leistungen,AR_TRADE,AR_TRADE,Current_Asset,ACCOUNTS_RECEIVABLE,Balance_Sheet,Debit
+Dynamics365,LOGI_EU,3300_VERBINDLICHKEITEN,3300_VERBINDLICHKEITEN,Verbindlichkeiten aus Lieferungen,AP_TRADE,AP_TRADE,Current_Liability,ACCOUNTS_PAYABLE,Balance_Sheet,Credit
+Dynamics365,LOGI_EU,0630_ANLEIHEN,0630_ANLEIHEN,Langfristige Bankverbindlichkeiten,DEBT_SENIOR,DEBT_SENIOR,Long_Term_Debt,SENIOR_DEBT,Balance_Sheet,Credit
+Dynamics365,LOGI_EU,2000_EIGENKAPITAL,2000_EIGENKAPITAL,Gezeichnetes Kapital und Rücklagen,EQUITY_RETAINED,EQUITY_RETAINED,Equity,RETAINED_EQUITY,Balance_Sheet,Credit
+QuickBooks,RETAIL_US,401_Merch_Sales,401_Merch_Sales,Omnichannel Merchandise Sales,REV_CORE,REV_CORE,Revenue,REVENUE,Income_Statement,Credit
+QuickBooks,RETAIL_US,501_Cost_Goods_Sold,501_Cost_Goods_Sold,Cost of Goods Sold & Direct Freight,COGS_DIRECT,COGS_DIRECT,COGS,COGS,Income_Statement,Debit
+QuickBooks,RETAIL_US,601_Payroll_SG&A,601_Payroll_SG&A,"Store Payroll, Marketing, & Rent",OPEX_SGA,OPEX_SGA,Operating_Expense,OPEX,Income_Statement,Debit
+QuickBooks,RETAIL_US,680_Depreciation,680_Depreciation,Depreciation on Store Fixtures,DA_DEPR,DA_DEPR,Depreciation_Amortization,DEPRECIATION,Income_Statement,Debit
+QuickBooks,RETAIL_US,701_Interest_Expense,701_Interest_Expense,Revolver & Term Interest Expense,FIN_INT_EXP,FIN_INT_EXP,Interest_Expense,INTEREST_EXPENSE,Income_Statement,Debit
+QuickBooks,RETAIL_US,101_Operating_Checking,101_Operating_Checking,Chase Commercial Operating Account,CASH_EQUIV,CASH_EQUIV,Cash,CASH,Balance_Sheet,Debit
+QuickBooks,RETAIL_US,120_Accounts_Receivable,120_Accounts_Receivable,Trade Accounts Receivable Control,AR_TRADE,AR_TRADE,Current_Asset,ACCOUNTS_RECEIVABLE,Balance_Sheet,Debit
+QuickBooks,RETAIL_US,201_Accounts_Payable,201_Accounts_Payable,Vendor Accounts Payable Control,AP_TRADE,AP_TRADE,Current_Liability,ACCOUNTS_PAYABLE,Balance_Sheet,Credit
+QuickBooks,RETAIL_US,270_Note_Payable,270_Note_Payable,Asset-Based Term Loan Principal,DEBT_SENIOR,DEBT_SENIOR,Long_Term_Debt,SENIOR_DEBT,Balance_Sheet,Credit
+QuickBooks,RETAIL_US,301_Owners_Equity,301_Owners_Equity,Shareholder Equity & Retained Earnings,EQUITY_RETAINED,EQUITY_RETAINED,Equity,RETAINED_EQUITY,Balance_Sheet,Credit
