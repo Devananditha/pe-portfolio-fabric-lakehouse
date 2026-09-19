@@ -65,3 +65,123 @@ The semantic model sits atop the **Gold Lakehouse Layer** in Microsoft Fabric / 
 - **`calendar_month`** (`Integer`): Calendar month ($1$ to $12$).
 - **`quarter`** (`String`): Calendar quarter (`2024-Q1`, `2025-Q4`).
 - **`is_stress_period`** (`Boolean`): Flag indicating operational stress window ($M18 - M21$).
+
+---
+
+## 4. Production DAX Measures & Time-Intelligence Calculations
+
+```dax
+// ====================================================================
+// 1. Core Financial Performance Measures
+// ====================================================================
+
+[Total Revenue USD] := 
+SUM(feat_portfolio_covenant_health[revenue])
+
+[Total COGS USD] := 
+SUM(feat_portfolio_covenant_health[cogs])
+
+[Total Gross Profit USD] := 
+[Total Revenue USD] - [Total COGS USD]
+
+[Gross Margin %] := 
+DIVIDE([Total Gross Profit USD], [Total Revenue USD], 0)
+
+[Total OPEX USD] := 
+SUM(feat_portfolio_covenant_health[opex])
+
+[Total EBITDA USD] := 
+SUM(feat_portfolio_covenant_health[ebitda])
+
+[EBITDA Margin %] := 
+DIVIDE([Total EBITDA USD], [Total Revenue USD], 0)
+
+// ====================================================================
+// 2. Trailing Twelve Months (TTM) & Rolling Window DAX
+// ====================================================================
+
+[Portfolio TTM Revenue] := 
+CALCULATE(
+    [Total Revenue USD],
+    DATESINPERIOD(
+        dim_period[date_end_of_month],
+        MAX(dim_period[date_end_of_month]),
+        -12,
+        MONTH
+    )
+)
+
+[Portfolio TTM EBITDA] := 
+CALCULATE(
+    [Total EBITDA USD],
+    DATESINPERIOD(
+        dim_period[date_end_of_month],
+        MAX(dim_period[date_end_of_month]),
+        -12,
+        MONTH
+    )
+)
+
+[Portfolio TTM EBITDA Margin %] := 
+DIVIDE([Portfolio TTM EBITDA], [Portfolio TTM Revenue], 0)
+
+[Rolling 3M EBITDA] := 
+CALCULATE(
+    [Total EBITDA USD],
+    DATESINPERIOD(
+        dim_period[date_end_of_month],
+        MAX(dim_period[date_end_of_month]),
+        -3,
+        MONTH
+    )
+)
+
+// ====================================================================
+// 3. Debt Service & Covenant Monitoring DAX
+// ====================================================================
+
+[Total Senior Debt Outstanding] := 
+SUM(dim_entity[principal_usd])
+
+[Total Monthly Debt Service] := 
+SUM(feat_portfolio_covenant_health[monthly_debt_service])
+
+[Debt Service Coverage Ratio (DSCR)] := 
+VAR CurrentEBITDA = [Total EBITDA USD]
+VAR CurrentDebtService = [Total Monthly Debt Service]
+RETURN
+    IF(
+        CurrentDebtService > 0,
+        DIVIDE(CurrentEBITDA, CurrentDebtService, 0),
+        BLANK()
+    )
+
+[Min Statutory Covenant DSCR] := 
+MAX(dim_entity[covenant_min_dscr])
+
+[DSCR Covenant Headroom] := 
+[Debt Service Coverage Ratio (DSCR)] - [Min Statutory Covenant DSCR]
+
+[Covenant Status] := 
+VAR CurrentDSCR = [Debt Service Coverage Ratio (DSCR)]
+VAR MinCovenant = [Min Statutory Covenant DSCR]
+RETURN
+    SWITCH(
+        TRUE(),
+        ISBLANK(CurrentDSCR), "NO_DATA",
+        CurrentDSCR < MinCovenant, "BREACH_ALERT",
+        CurrentDSCR < (MinCovenant + 0.15), "WARNING",
+        "HEALTHY"
+    )
+
+[Active Covenant Breaches] := 
+COUNTROWS(
+    FILTER(
+        ADDCOLUMNS(
+            VALUES(dim_entity[entity_id]),
+            "@Status", [Covenant Status]
+        ),
+        [@Status] = "BREACH_ALERT"
+    )
+)
+```
