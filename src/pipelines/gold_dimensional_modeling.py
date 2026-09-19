@@ -191,6 +191,7 @@ class GoldDimensionalModelingPipeline:
         # Add backward-compatible schema aliases for legacy tests and downstream consumers
         df["entity_id"] = df["entity_code"]
         df["period"] = df["period_key"]
+        df["period_index"] = df.groupby("entity_code").cumcount() + 1
         df["revenue_usd"] = df["revenue"]
         df["cogs_usd"] = df["cogs"]
         df["gross_profit_usd"] = df["gross_profit"]
