@@ -1,37 +1,102 @@
-"""Silver Harmonization Pipeline.
+"""Silver Semantic Harmonization & Multi-Currency Ledger Pipeline.
 
-Harmonizes heterogeneous ERP source systems into a unified Lakehouse schema:
-1. Crosswalks legacy account IDs to canonical Chart of Accounts (REV_CORE, COGS_DIRECT, etc.).
-2. Translates functional currency balances to standard reporting currency (USD) via monthly FX rates.
-3. Performs data quality assertions (e.g. zero unmapped accounts, valid dates, type casting).
+Phase 2 Core Pipeline:
+1. Ingests raw multi-entity ERP transaction logs from data/01_raw/.
+2. Validates schema invariants (non-null dates, valid entity codes, positive transaction amounts).
+3. Crosswalks against canonical GAAP/IFRS Chart of Accounts on (entity_code, raw_account_code).
+4. Translates multi-currency balances to reporting USD via monthly FX cross-rates.
+5. Standardizes transaction polarity (credits for revenue as positive inflows, debits for costs as positive cost items).
+6. Appends cryptographic salted SHA-256 lineage tracking and audit metadata.
+7. Persists partitioned Parquet datasets to data/02_silver/prm_harmonized_financial_ledger.parquet.
+8. Generates comprehensive audit summary in reports/silver_harmonization_audit_summary.json.
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import hashlib
+import json
+import logging
 from pathlib import Path
 import sys
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-# Ensure project root is in sys.path for direct script execution
+# Ensure project root in sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from src.pipelines.bronze_ingestion import BronzeIngestionPipeline
 
 
+# Setup structured logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("silver_harmonization")
+
 SILVER_DIR = PROJECT_ROOT / "data" / "02_silver"
+REPORTS_DIR = PROJECT_ROOT / "reports"
+HASH_SALT = "PE_LAKEHOUSE_LINEAGE_SALT_2024_09_"
+
+VALID_ENTITIES: Set[str] = {"DURA_US", "MED_UK", "LOGI_EU", "RETAIL_US"}
+EXPENSE_STATEMENT_LINES: Set[str] = {
+    "COGS", "OPEX", "DEPRECIATION", "AMORTIZATION", "INTEREST_EXPENSE"
+}
 
 
 class SilverHarmonizationPipeline:
-    """Orchestrates Bronze-to-Silver harmonization and multi-currency translation."""
+    """Production-grade Silver semantic harmonization and multi-currency pipeline."""
 
-    def __init__(self, silver_dir: Optional[Path] = None, bronze_pipeline: Optional[BronzeIngestionPipeline] = None):
+    def __init__(
+        self,
+        silver_dir: Optional[Path] = None,
+        reports_dir: Optional[Path] = None,
+        bronze_pipeline: Optional[BronzeIngestionPipeline] = None
+    ):
         self.silver_dir = silver_dir or SILVER_DIR
+        self.reports_dir = reports_dir or REPORTS_DIR
         self.bronze_pipeline = bronze_pipeline or BronzeIngestionPipeline()
+
+    def validate_schema_invariants(self, df: pd.DataFrame) -> None:
+        """Enforces schema invariants: non-null dates, valid entity codes, and positive quantities."""
+        logger.info("Validating raw general ledger schema invariants...")
+
+        # 1. Non-null posting dates
+        date_col = "posting_date" if "posting_date" in df.columns else "transaction_date"
+        if df[date_col].isna().any():
+            null_count = int(df[date_col].isna().sum())
+            raise ValueError(f"Schema Invariant Failure: Found {null_count} records with null {date_col}.")
+
+        # Validate date parsing
+        try:
+            parsed_dates = pd.to_datetime(df[date_col])
+            if parsed_dates.isna().any():
+                raise ValueError("Encountered unparseable date values.")
+        except Exception as e:
+            raise ValueError(f"Schema Invariant Failure: Invalid date format in {date_col}: {e}")
+
+        # 2. Valid entity codes
+        entity_col = "entity_code" if "entity_code" in df.columns else "entity_id"
+        unknown_entities = set(df[entity_col].unique()) - VALID_ENTITIES
+        if unknown_entities:
+            raise ValueError(f"Schema Invariant Failure: Unknown entity codes encountered: {unknown_entities}")
+
+        # 3. Positive amounts: verify debit/credit/local amounts are non-negative
+        for amt_col in ["debit_amount", "credit_amount"]:
+            if amt_col in df.columns:
+                num_vals = pd.to_numeric(df[amt_col], errors="coerce")
+                if (num_vals < 0).any():
+                    neg_count = int((num_vals < 0).sum())
+                    raise ValueError(f"Schema Invariant Failure: Found {neg_count} negative values in {amt_col}.")
+
+        logger.info(f"Schema invariants passed: {len(df):,} records validated across {len(VALID_ENTITIES)} entities.")
 
     def harmonize_general_ledger(
         self,
