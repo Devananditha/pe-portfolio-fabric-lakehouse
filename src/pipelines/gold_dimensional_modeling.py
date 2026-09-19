@@ -138,8 +138,41 @@ class GoldDimensionalModelingPipeline:
                     ELSE 0.0 
                 END, 2) AS pop_revenue_growth_pct
             FROM pnl_metrics p
+        ),
+        covenant_metrics AS (
+            -- CTE 4: Debt-Service Health & Dynamic Covenant Compliance
+            SELECT
+                w.entity_code,
+                w.period_key,
+                w.revenue,
+                w.cogs,
+                w.gross_profit,
+                w.gross_margin_pct,
+                w.opex,
+                w.ebitda,
+                w.ebit,
+                w.ebitda_margin_pct,
+                w.da,
+                w.interest_expense,
+                w.rolling_3m_ebitda,
+                w.ttm_revenue,
+                w.ttm_ebitda,
+                COALESCE(w.lag_revenue, w.revenue) AS lag_revenue,
+                w.pop_revenue_growth_pct,
+                d.entity_name,
+                d.facility_name,
+                d.currency AS facility_currency,
+                CAST(d.principal_origination AS DOUBLE) AS principal_origination,
+                CAST(d.annual_interest_rate AS DOUBLE) AS annual_interest_rate,
+                CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE) AS monthly_amortization,
+                CAST(d.covenant_min_dscr AS DOUBLE) AS covenant_min_dscr,
+                CAST(d.covenant_max_leverage_ratio AS DOUBLE) AS covenant_max_leverage_ratio,
+                -- Total Monthly Debt Service = Interest Expense + Monthly Amortization
+                ROUND(w.interest_expense + CAST(COALESCE(d.monthly_amortization_usd, d.monthly_amortization) AS DOUBLE), 2) AS monthly_debt_service
+            FROM windowed_metrics w
+            JOIN debt_master d ON w.entity_code = d.entity_id
         )
-        SELECT * FROM windowed_metrics ORDER BY entity_code, period_key;
+        SELECT * FROM covenant_metrics ORDER BY entity_code, period_key;
         """
         df = con.execute(query).df()
         con.close()
