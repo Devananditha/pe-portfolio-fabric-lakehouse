@@ -104,32 +104,60 @@ class SilverHarmonizationPipeline:
         coa_df: pd.DataFrame,
         fx_df: pd.DataFrame
     ) -> pd.DataFrame:
-        """Harmonizes GL transactions with canonical COA and converts amounts to reporting USD."""
-        # Convert numeric types
-        gl = gl_df.copy()
-        gl["debit_amount"] = pd.to_numeric(gl["debit_amount"], errors="raise")
-        gl["credit_amount"] = pd.to_numeric(gl["credit_amount"], errors="raise")
-        gl["net_amount"] = pd.to_numeric(gl["net_amount"], errors="raise")
-        gl["transaction_date"] = pd.to_datetime(gl["transaction_date"])
+        """Executes vectorized crosswalk joining, multi-currency conversion, and polarity standardization."""
+        logger.info("Harmonizing General Ledger with Canonical Chart of Accounts...")
+        df = gl_df.copy()
 
-        # Join COA crosswalk
-        coa_clean = coa_df[[
-            "source_system", "legacy_account_id", "canonical_account_code",
-            "account_category", "financial_statement", "normal_balance"
-        ]].drop_duplicates()
+        # Normalize column aliases
+        if "posting_date" not in df.columns and "transaction_date" in df.columns:
+            df["posting_date"] = df["transaction_date"]
+        if "entity_code" not in df.columns and "entity_id" in df.columns:
+            df["entity_code"] = df["entity_id"]
+        if "raw_account_code" not in df.columns and "legacy_gl_code" in df.columns:
+            df["raw_account_code"] = df["legacy_gl_code"]
 
-        harmonized = gl.merge(
-            coa_clean,
-            left_on=["source_system", "legacy_gl_code"],
-            right_on=["source_system", "legacy_account_id"],
+        # Validate schema invariants
+        self.validate_schema_invariants(df)
+
+        # Parse numeric types vectorized
+        df["debit_amount"] = pd.to_numeric(df["debit_amount"], errors="raise")
+        df["credit_amount"] = pd.to_numeric(df["credit_amount"], errors="raise")
+        df["net_amount"] = pd.to_numeric(df["net_amount"], errors="raise")
+        df["posting_date"] = pd.to_datetime(df["posting_date"]).dt.strftime("%Y-%m-%d")
+
+        if "amount_local_currency" not in df.columns:
+            df["amount_local_currency"] = np.where(df["debit_amount"] > 0, df["debit_amount"], df["credit_amount"])
+        else:
+            df["amount_local_currency"] = pd.to_numeric(df["amount_local_currency"], errors="raise")
+
+        # 1. Join with Canonical Chart of Accounts on (entity_code, raw_account_code)
+        coa = coa_df.copy()
+        if "entity_code" not in coa.columns and "source_system" in coa.columns:
+            sys_to_ent = {"SAP": "DURA_US", "NetSuite": "MED_UK", "Dynamics365": "LOGI_EU", "QuickBooks": "RETAIL_US"}
+            coa["entity_code"] = coa["source_system"].map(sys_to_ent)
+        if "raw_account_code" not in coa.columns and "legacy_account_id" in coa.columns:
+            coa["raw_account_code"] = coa["legacy_account_id"]
+        if "canonical_code" not in coa.columns and "canonical_account_code" in coa.columns:
+            coa["canonical_code"] = coa["canonical_account_code"]
+
+        coa_join_cols = [
+            "entity_code", "raw_account_code", "canonical_code", "canonical_account_code",
+            "account_category", "financial_statement_line", "financial_statement", "normal_balance"
+        ]
+        coa_subset = coa[[c for c in coa_join_cols if c in coa.columns]].drop_duplicates()
+
+        harmonized = df.merge(
+            coa_subset,
+            on=["entity_code", "raw_account_code"],
             how="left"
         )
 
-        # Assertion: zero unmapped accounts
-        unmapped = harmonized[harmonized["canonical_account_code"].isna()]
+        # Invariant: Zero unmapped accounts
+        canonical_check_col = "canonical_code" if "canonical_code" in harmonized.columns else "canonical_account_code"
+        unmapped = harmonized[harmonized[canonical_check_col].isna()]
         if not unmapped.empty:
-            sample_unmapped = unmapped[["source_system", "legacy_gl_code"]].drop_duplicates().to_dict(orient="records")
-            raise ValueError(f"Found {len(unmapped)} GL lines with unmapped legacy accounts: {sample_unmapped}")
+            missing = unmapped[["entity_code", "raw_account_code"]].drop_duplicates().to_dict(orient="records")
+            raise ValueError(f"COA Crosswalk Failure: Found {len(unmapped)} records with unmapped accounts: {missing}")
 
         # Join FX conversion rates (to USD)
         fx_clean = fx_df[fx_df["to_currency"] == "USD"][[
